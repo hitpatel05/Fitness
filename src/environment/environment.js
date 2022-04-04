@@ -1,6 +1,6 @@
 //For local setup
 const local = {
-    apiUrl: "http://localhost:",
+    apiUrl: "http://54.201.160.69:",
     PORT: "3155"
 };
 
