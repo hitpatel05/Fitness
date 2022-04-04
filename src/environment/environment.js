@@ -1,7 +1,7 @@
 //For local setup
 const local = {
-    apiUrl: "http://54.201.160.69:",
-    PORT: "3155"
+    apiUrl: "https://create-node-fitness-app.herokuapp.com",
+    PORT: ""
 };
 
 //For staging server
