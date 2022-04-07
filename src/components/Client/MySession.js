@@ -142,8 +142,7 @@ function MySession() {
                 if (response?.data?.result) {
                     setucNoOfRecords(response.data?.result[0]?.totalCount[0]?.count || 0);
                     setUpcomingList(response.data?.result[0]?.paginatedResults);
-                    debugger;
-                                    } else {
+                } else {
                     setUpcomingList([]);
                 }
             }
@@ -215,7 +214,15 @@ function MySession() {
                         </div>
                     </div>
                     <div className="row">
-                        {!isLoader && (upcomingList.length === 0) || (completedList.length === 0) ?
+                        {!isLoader && (upcomingList.length === 0) ?
+                            <div className="col-12">
+                                <h4 className="no-record-box">
+                                    <i className="fa fa-exclamation-triangle alerticon"></i>
+                                    No session found!
+                                </h4>
+                            </div>
+                            : ""}
+                        {!isLoader && (completedList.length === 0) ?
                             <div className="col-12">
                                 <h4 className="no-record-box">
                                     <i className="fa fa-exclamation-triangle alerticon"></i>

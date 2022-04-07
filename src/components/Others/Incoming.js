@@ -57,7 +57,7 @@ function Incoming() {
         }).then(function (response) {
             if (response.data.status === 1) {
                 setFirstname(response.data?.result?.senderData?.firstname || "Guest");
-                setProfile((apiUrl + PORT + response.data?.result?.senderData?.profile) || "/img/videoimg.png");
+                setProfile((apiUrl + PORT + response.data?.result?.senderData?.profile) || "/img/Small-no-img.png");
                 if (response.data?.result?.videoSessions?.statusid === 0) {
                     return true;
                 } if (response.data?.result?.videoSessions?.statusid === 1) {
@@ -146,16 +146,18 @@ function Incoming() {
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
             </head>
 
-            <div class="bg-black">
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="vediosession mx-auto d-block my-5 py-5">
-                            <img src={`${profile}`} class="mt-5 w-100" alt="Profile" onError={(e) => { e.target.src = "/img/Small-no-img.png" }} />
-                            <h3 class="text-center text-white mt-4">{firstname || "Guest"}</h3>
-                            <p class="text-center text-white font-weight-bold">Wants to Join Session</p>
-                            <ul class="list-inline d-flex justify-content-between">
-                                <li class="list-inline-item"><a href={() => false} onClick={(e) => { e.stopPropagation(); rejectMeeting(); }}><i class="fas fa-phone bg-danger p-4 rounded-circle text-white"></i></a></li>
-                                <li class="list-inline-item"><a href={() => false} onClick={(e) => { e.stopPropagation(); acceptMeeting(); }}><i class="fas fa-video bg-success p-4 rounded-circle text-white"></i></a></li>
+            <div className="bg-black">
+                <div className="col-md-12">
+                    <div className="row">
+                        <div className="vediosession mx-auto d-block my-5 py-5">
+                            {profile &&
+                                <><img src={`${profile}`} className="mt-5 w-100" alt="Profile" onError={(e) => { e.target.src = "/img/Small-no-img.png" }} /></> 
+                            }
+                            <h3 className="text-center text-white mt-4">{firstname || "Guest"}</h3>
+                            <p className="text-center text-white font-weight-bold">Wants to Join Session</p>
+                            <ul className="list-inline d-flex justify-content-between">
+                                <li className="list-inline-item"><a href={() => false} onClick={(e) => { e.stopPropagation(); rejectMeeting(); }}><i className="fas fa-phone bg-danger p-4 rounded-circle text-white"></i></a></li>
+                                <li className="list-inline-item"><a href={() => false} onClick={(e) => { e.stopPropagation(); acceptMeeting(); }}><i className="fas fa-video bg-success p-4 rounded-circle text-white"></i></a></li>
                             </ul>
                         </div>
                     </div>

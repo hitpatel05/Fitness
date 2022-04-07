@@ -1864,7 +1864,7 @@ button.dropdown-item {
 }
 
 .banner-user p {
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .filter_nav li {
@@ -4624,5 +4624,22 @@ a.edit-btn:hover {
 }
 
 .uploadimg label {
+    cursor: pointer;
+}
+.banner-username{
+    display: flex;
+    color: #fff;
+    text-decoration: none;
+}
+
+.user-name {
+    display: flex;
+    color: #fff !important;
+    text-decoration: none !important;
+    vertical-align: bottom;
+    font-size: 14px;
+}
+
+.sessioninfo h6{
     cursor: pointer;
 }

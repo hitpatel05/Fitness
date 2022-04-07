@@ -194,7 +194,7 @@ function BookSessionsDetail() {
         }
         setErrors(errormsg);
         if (isSubmit) {
-            debugger
+
             var sTime = selectedStartTime;
             var endTime = new Date(selectedStartTime);
             endTime = new Date(endTime.setMinutes(endTime.getMinutes() + 60));
@@ -216,7 +216,7 @@ function BookSessionsDetail() {
             }
 
             setStartDateStr(selectedStartDate.getDate() + ' ' + monthNames[selectedStartDate.getMonth()]);
-            setStartTimeStr(sTime.getHours()+':'+sTime.getMinutes() + ' - ' + endTime.getHours()+':'+endTime.getMinutes());
+            setStartTimeStr(sTime.getHours() + ':' + sTime.getMinutes() + ' - ' + endTime.getHours() + ':' + endTime.getMinutes());
 
             setIsLoader(true);
             await axios.post(`${apiUrl}${PORT}/client/session/sessionrequest`, obj, {
@@ -320,7 +320,7 @@ function BookSessionsDetail() {
                                                 <span className="float-md-right">{startDateStr}</span>
                                             </div>
                                             <div className="col-12 session-text">
-                                                <span className="float-md-left">Cross-Fit</span>
+                                                <span className="float-md-left">Cross-Fit with {sessionInfo[0]?.trainer_data?.firstname}</span>
                                                 <span className="float-md-right">{startTimeStr}</span>
                                             </div>
                                         </div>
@@ -510,7 +510,12 @@ function BookSessionsDetail() {
                     <Modal.Title></Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="pt-2">
-                    <div className="col-md-12 col-12 text-center" onClick={() => setConfirmReqModal(false)}>
+                    <div className="col-md-12 col-12 text-center" onClick={() => {
+                        setConfirmReqModal(false);
+                        setTimeout(() => {
+                            setOpen(false)
+                        }, 5000);
+                    }}>
                         <button className="checkbtn" onClick={() => setOpen(!open)} aria-controls="session-book" data-dismiss="modal" aria-expanded={open}>
                             <i className="far fa-check-circle check-i"></i>
                             <h4 className="book-title">Awaiting confirmation from Trainer.</h4>

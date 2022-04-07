@@ -36,7 +36,7 @@ function SignUp() {
 
 
     const OnCoverFileChange = (event) => {
-        debugger
+        
         const file_size = event.target.files[0].size;
         if (file_size > 2096000) {
             setCoverImagePreview(CoverImage_URL);
@@ -59,7 +59,7 @@ function SignUp() {
     };
 
     const OnFileChange = (event) => {
-        debugger
+        
         const file_size = event.target.files[0].size;
         if (file_size > 1048000) {
             setProfileImagePreview(ProfileImage_URL);
@@ -402,7 +402,7 @@ function SignUp() {
         }
         setErrors(errormsg);
         if (isValid === true) {
-            debugger
+            
             let getFirstStepNextObj = JSON.parse(localStorage.getItem("firstStepNext"));
             let qualificationsObj = {
                 "name": qualificationslist.join(","),
@@ -455,14 +455,14 @@ function SignUp() {
             //     "maillinglist": (user.maillinglist === "on") ? true : user.maillinglist,
             //     "textnotifications": (user.textnotifications === "on") ? true : user.textnotifications
             // }
-            debugger
+            
             document.querySelector('.loading').classList.remove('d-none');
             axios.post(`${apiUrl}${PORT}/trainer/account/register`, formData)
                 .then(response => {
-                    debugger
+                    
                     document.querySelector('.loading').classList.add('d-none');
                     if (response.data.status === 1) {
-                        debugger
+                        
                         localStorage.setItem('trainerId', response.data.result._id);
                         if (qualificationsObj != null || certificationsObj != null) {
                             updateTrainerPara(qualificationsObj, certificationsObj, response.data.result._id);
@@ -487,7 +487,7 @@ function SignUp() {
         }
     }
     const updateTrainerPara = (qualificationsObj, certificationsObj, tid) => {
-        debugger
+        
         var form_data = new FormData();
         for (var key in qualificationsObj?.path) {
             form_data.append(qualificationsObj?.path[key].name, qualificationsObj?.path[key].uri);
@@ -498,11 +498,11 @@ function SignUp() {
         form_data.append("id", tid);
         form_data.append("qualifications", JSON.stringify(qualificationsObj));
         form_data.append("certifications", JSON.stringify(certificationsObj));
-        debugger
+        
         document.querySelector('.loading').classList.remove('d-none');
         axios.post(`${apiUrl}${PORT}/trainer/account/updateTrainerPara`, form_data)
             .then(response => {
-                debugger
+                
                 document.querySelector('.loading').classList.add('d-none');
                 if (response.data.status === 1) {
                     history.push("/trainersaccountinfo");

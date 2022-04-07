@@ -6,13 +6,22 @@ import { useHistory } from 'react-router-dom';
 import swal from 'sweetalert';
 import { apiUrl, PORT } from '../../environment/environment';
 import { verifytokenCall } from '../Others/Utils.js';
+import Pagination from '../Pagination/Pagination';
+
 function ScheduleRequest() {
     const history = useHistory();
     const [Id, setId] = useState("");
     const [reason, setReason] = useState("");
     const [errors, setErrors] = useState({});
     const [requestList, setRequestList] = useState([]);
+    const [rnoOfRecords, setrNoOfRecords] = useState(0);
+    const [rpageNum, setrPageNum] = useState(1);
+    const rlimitValue = 4;
     const [acceptList, setAcceptList] = useState([]);
+    const [anoOfRecords, setaNoOfRecords] = useState(0);
+    const [apageNum, setaPageNum] = useState(1);
+    const alimitValue = 6;
+
     const [sessionResponseModal, setSessionResponseModal] = useState(false);
     const [detailModal, setDetailModal] = useState(false);
     const [isLoader, setIsLoader] = useState(false);
@@ -21,7 +30,9 @@ function ScheduleRequest() {
     const rejectRequestClose = () => setSessionResponseModal(false);
     useEffect(() => {
         callToken();
-        fetchList();
+        //fetchList(false, null);
+        getrequestsessionList(1, false, null);
+        getacceptsessionList(1);
     }, [])
     useEffect(() => {
     }, [requestList, acceptList])
@@ -32,116 +43,194 @@ function ScheduleRequest() {
             callToken();
         }, 3000);
     }
-    const fetchList = async () => {
+
+    const getrequestsessionList = async (val, bolval, objdata) => {
         setIsLoader(true);
-        await axios.get(`${apiUrl}${PORT}/trainer/session/getsessionrequest`, {}, {}
+        var obj = {
+            limitValue: rlimitValue,
+            pageNumber: (val || rpageNum)
+        };
+        await axios.post(`${apiUrl}${PORT}/trainer/session/getPendingRequest`, obj, {}
         ).then(function (response) {
             setIsLoader(false);
             if (response.data.status === 1) {
-                // setRequestList(response.data.result.requestList);
-                // setAcceptList(response.data.result.acceptList);
-                var requestList = [];//response.data.result.requestList;
-                var acceptList = [];//response.data.result.acceptList;
-                var curTime = new Date().toDateString();
-                var acnt = 0; var rcnt = 0;
                 if (response?.data?.result) {
-                    if (response?.data?.result?.requestList.length > 0) {
-                        response?.data?.result?.requestList.forEach(element => {
-                            var sessdate = new Date(element?.date).toDateString();
-                            var currentdate = new Date();
-                            var currenthours = new Date().getHours();
-                            currentdate.setHours(currenthours);
-                            currentdate.setMinutes(0);
-                            currentdate.setSeconds(0);
-                            currentdate.setMilliseconds(0);
-
-                            var sessiondate = new Date(sessdate + " " + element?.starthour);
-                            var sessionhours = new Date(sessdate + " " + element?.starthour).getHours();
-                            sessiondate.setHours(sessionhours);
-                            sessiondate.setMinutes(0);
-                            sessiondate.setSeconds(0);
-                            sessiondate.setMilliseconds(0);
-
-                            if (new Date(sessdate).setHours(0, 0, 0) === new Date(curTime).setHours(0, 0, 0)) {
-                                if (sessiondate >= currentdate) {
-                                    requestList.push(element);
-                                }
-                            } else if (new Date(sessdate).setHours(0, 0, 0) >= new Date(curTime).setHours(0, 0, 0)) {
-                                requestList.push(element);
-                            }
-                            rcnt++;
-                            if (response.data.result.requestList.length === rcnt) {
-                                setRequestList(requestList);
-                            }
-                        });
-                    }
-                    if (response?.data?.result?.acceptList.length > 0) {
-                        response?.data?.result?.acceptList.forEach(element => {
-
-                            var sessdate = new Date(element?.date).toDateString();
-                            var currentdate = new Date();
-                            var currenthours = new Date().getHours();
-                            var currentminutes = new Date().getMinutes();
-                            currentdate.setHours(currenthours);
-                            currentdate.setMinutes(currentminutes);
-                            currentdate.setSeconds(0);
-                            currentdate.setMilliseconds(0);
-
-                            var sessionStdate = new Date(sessdate + " " + element?.starthour);
-                            var sessionSthours = new Date(sessdate + " " + element?.starthour).getHours();
-                            sessionStdate.setHours(sessionSthours);
-                            sessionStdate.setMinutes(0);
-                            sessionStdate.setSeconds(0);
-                            sessionStdate.setMilliseconds(0);
-
-
-                            var sessiondate = new Date(sessdate + " " + element?.endhour);
-                            var sessionhours = new Date(sessdate + " " + element?.endhour).getHours();
-                            sessiondate.setHours(sessionhours);
-                            sessiondate.setMinutes(0);
-                            sessiondate.setSeconds(0);
-                            sessiondate.setMilliseconds(0);
-                            if (currentdate < sessiondate) {
-                                acceptList.push(element);
-                            }
-                            if ((currentdate >= sessionStdate) && (currentdate < sessiondate)) {
-                                element.isVideocall = true;
-                            } else {
-                                element.isVideocall = false;
-                            }
-
-                            // var sessdate = new Date(element?.date).toDateString();
-                            // var currenthours = new Date().getHours();
-                            // var sessionhours = new Date(sessdate + " " + element?.starthour).getHours();
-                            // // if (new Date(sessdate).setHours(0, 0, 0) === new Date(curTime).setHours(0, 0, 0)) {
-                            // if (sessionhours >= currenthours) {
-                            //     acceptList.push(element);
-                            // } else if (new Date(sessdate).setHours(0, 0, 0) >= new Date(curTime).setHours(0, 0, 0)) {
-                            //     acceptList.push(element);
-                            // }
-                            acnt++;
-                            if (response.data.result.acceptList.length === acnt) {
-                                setAcceptList(acceptList);
-                            }
-                        });
-                    }
+                    setrNoOfRecords(response.data?.result[0]?.totalCount[0]?.count || 0);
+                    setRequestList(response.data?.result[0]?.paginatedResults);
                 } else {
-                    setRequestList(requestList);
-                    setAcceptList(acceptList);
+                    setrNoOfRecords(0);
+                    setRequestList([]);
+                }
+                if (bolval) {
+                    callingRequest(objdata);
                 }
             }
             return response;
         }).catch(function (error) {
             setIsLoader(false);
-            //window.alert(error);
+            window.alert(error);
         });
     }
+
+    const getacceptsessionList = async (val) => {
+        setIsLoader(true);
+        var obj = {
+            limitValue: alimitValue,
+            pageNumber: (val || apageNum)
+        };
+
+        await axios.post(`${apiUrl}${PORT}/trainer/session/getAcceptRequest`, obj, {}
+        ).then(function (response) {
+            setIsLoader(false);
+            if (response.data.status === 1) {
+                if (response?.data?.result) {
+                    setaNoOfRecords(response.data?.result[0]?.totalCount[0]?.count || 0);
+                    setAcceptList(response.data?.result[0]?.paginatedResults);
+                } else {
+                    setaNoOfRecords(0);
+                    setAcceptList([]);
+                }
+            }
+            return response;
+        }).catch(function (error) {
+            setIsLoader(false);
+            window.alert(error);
+        });
+    }
+
+
+    const rcurPage = (pageNum) => {
+        setrPageNum(pageNum);
+        getrequestsessionList(pageNum, false, null);
+    }
+
+    const acurPage = (pageNum) => {
+        setaPageNum(pageNum);
+        getacceptsessionList(pageNum);
+    }
+
+    //const fetchList = async (val, objdata) => {
+
+    // setIsLoader(true);
+    // await axios.get(`${apiUrl}${PORT}/trainer/session/getsessionrequest`, {}, {}
+    // ).then(function (response) {
+    //     setIsLoader(false);
+    //     setRequestList([]);
+    //     setAcceptList([]);
+    //     if (response.data.status === 1) {
+    //         // setRequestList(response.data.result.requestList);
+    //         // setAcceptList(response.data.result.acceptList);
+
+    //         // var requestList = [];//response.data.result.requestList;
+    //         // var acceptList = [];//response.data.result.acceptList;
+    //         // var curTime = new Date().toDateString();
+    //         // var acnt = 0; var rcnt = 0;
+    //         // if (response?.data?.result) {
+    //         //     if (response?.data?.result?.requestList.length > 0) {
+    //         //         response?.data?.result?.requestList.forEach(element => {
+    //         //             var sessdate = new Date(element?.date).toDateString();
+    //         //             var currentdate = new Date();
+    //         //             var currenthours = new Date().getHours();
+    //         //             currentdate.setHours(currenthours);
+    //         //             currentdate.setMinutes(0);
+    //         //             currentdate.setSeconds(0);
+    //         //             currentdate.setMilliseconds(0);
+
+    //         //             var sessiondate = new Date(sessdate + " " + element?.starthour);
+    //         //             var sessionhours = new Date(sessdate + " " + element?.starthour).getHours();
+    //         //             sessiondate.setHours(sessionhours);
+    //         //             sessiondate.setMinutes(0);
+    //         //             sessiondate.setSeconds(0);
+    //         //             sessiondate.setMilliseconds(0);
+
+    //         //             if (new Date(sessdate).setHours(0, 0, 0) === new Date(curTime).setHours(0, 0, 0)) {
+    //         //                 if (sessiondate >= currentdate) {
+    //         //                     requestList.push(element);
+    //         //                 }
+    //         //             } else if (new Date(sessdate).setHours(0, 0, 0) >= new Date(curTime).setHours(0, 0, 0)) {
+    //         //                 requestList.push(element);
+    //         //             }
+    //         //             rcnt++;
+    //         //             if (response.data.result.requestList.length === rcnt) {
+    //         //                 setRequestList(requestList);
+    //         //             }
+    //         //         });
+    //         //     }
+    //         //     if (response?.data?.result?.acceptList.length > 0) {
+    //         //         response?.data?.result?.acceptList.forEach(element => {
+
+    //         //             var sessdate = new Date(element?.date).toDateString();
+    //         //             var currentdate = new Date();
+    //         //             var currenthours = new Date().getHours();
+    //         //             var currentminutes = new Date().getMinutes();
+    //         //             currentdate.setHours(currenthours);
+    //         //             currentdate.setMinutes(currentminutes);
+    //         //             currentdate.setSeconds(0);
+    //         //             currentdate.setMilliseconds(0);
+
+    //         //             var sessionStdate = new Date(sessdate + " " + element?.starthour);
+    //         //             var sessionSthours = new Date(sessdate + " " + element?.starthour).getHours();
+    //         //             sessionStdate.setHours(sessionSthours);
+    //         //             sessionStdate.setMinutes(0);
+    //         //             sessionStdate.setSeconds(0);
+    //         //             sessionStdate.setMilliseconds(0);
+
+
+    //         //             var sessiondate = new Date(sessdate + " " + element?.endhour);
+    //         //             var sessionhours = new Date(sessdate + " " + element?.endhour).getHours();
+    //         //             sessiondate.setHours(sessionhours);
+    //         //             sessiondate.setMinutes(0);
+    //         //             sessiondate.setSeconds(0);
+    //         //             sessiondate.setMilliseconds(0);
+    //         //             if (currentdate < sessiondate) {
+    //         //                 acceptList.push(element);
+    //         //             }
+    //         //             if ((currentdate >= sessionStdate) && (currentdate < sessiondate)) {
+    //         //                 element.isVideocall = true;
+    //         //             } else {
+    //         //                 element.isVideocall = false;
+    //         //             }
+
+    //         //             // var sessdate = new Date(element?.date).toDateString();
+    //         //             // var currenthours = new Date().getHours();
+    //         //             // var sessionhours = new Date(sessdate + " " + element?.starthour).getHours();
+    //         //             // // if (new Date(sessdate).setHours(0, 0, 0) === new Date(curTime).setHours(0, 0, 0)) {
+    //         //             // if (sessionhours >= currenthours) {
+    //         //             //     acceptList.push(element);
+    //         //             // } else if (new Date(sessdate).setHours(0, 0, 0) >= new Date(curTime).setHours(0, 0, 0)) {
+    //         //             //     acceptList.push(element);
+    //         //             // }
+    //         //             acnt++;
+    //         //             if (response.data.result.acceptList.length === acnt) {
+    //         //                 setAcceptList(acceptList);
+    //         //             }
+    //         //         });
+    //         //     }
+    //         // } else {
+    //         //     setRequestList(requestList);
+    //         //     setAcceptList(acceptList);
+    //         // }
+
+    //         setRequestList(response.data.result.requestList[0]?.paginatedResults);
+    //         setAcceptList(acceptList);
+    //         if (val) {
+    //             callingRequest(objdata);
+    //         }
+    //     }
+    //     return response;
+    // }).catch(function (error) {
+    //     setIsLoader(false);
+    //     //window.alert(error);
+    // });
+
+    //}
 
     const handleInputs = (e) => {
         setReason(e.target.value);
     }
 
     const acceptRequest = async (e) => {
+
         const formData = new FormData();
         formData.append('id', e._id);
         formData.append('status', 1);
@@ -152,9 +241,9 @@ function ScheduleRequest() {
             /* document.querySelector('.loading').classList.add('d-none'); */
             setIsLoader(false);
             if (response.data.status === 1) {
-                setRequestList([]);
-                setAcceptList([]);
-                fetchList();
+                //fetchList(true, e);
+                getrequestsessionList(1, true, e);
+                getacceptsessionList(1);
             }
             else {
                 swal({
@@ -201,7 +290,9 @@ function ScheduleRequest() {
                     setReason('');
                     setSessionResponseModal(false);
                     $(".modal-backdrop").removeClass("show");
-                    fetchList();
+                    //fetchList(false, null);
+                    getrequestsessionList(1, false, null);
+                    getacceptsessionList(1);
                 }
                 else {
                     swal({
@@ -337,36 +428,6 @@ function ScheduleRequest() {
                     <div className="col-md-6">
                         <h1 className="main_title mb-4">Session Requests</h1>
                     </div>
-                    {/* <div className="col-md-6">
-                        <ul className="list-inline Sessiontoggle float-right">
-                            <li className="list-inline-item">
-                                <i className="fas fa-star"></i>
-                            </li>
-                            <li className="list-inline-item">
-                                Available
-                                <span className="float-right">
-                                    <label className="switch ">
-                                        <span className="slider round"></span>
-                                    </label>
-                                </span>
-                            </li>
-                            <li className="list-inline-item">
-                                Online<span className="float-right">
-                                    <label className="switch ">
-                                        <span className="slider round"></span>
-                                    </label>
-                                </span>
-                            </li>
-                            <li className="list-inline-item">
-                                All<span className="float-right">
-                                    <label className="switch ">
-                                        <span className="slider round"></span>
-                                    </label>
-                                </span>
-                            </li>
-
-                        </ul>
-                    </div> */}
                 </div>
                 {requestList.length > 0 ?
                     <><div className="col-md-12 p-0">
@@ -392,6 +453,11 @@ function ScheduleRequest() {
                                         </div>
                                     </div>)
                             })}
+
+                            <div className="col-md-12 col-sm-12 col-12 pagi_bg">
+                                <Pagination className="pagination-bar" currentPage={rpageNum} totalCount={rnoOfRecords}
+                                    pageSize={rlimitValue} onPageChange={page => rcurPage(page)} />
+                            </div>
                         </div>
                     </div>
                     </>
@@ -437,6 +503,11 @@ function ScheduleRequest() {
                                     </div>
                                 </div>)
                             })}
+
+                            <div className="col-md-12 col-sm-12 col-12 pagi_bg">
+                                <Pagination className="pagination-bar" currentPage={apageNum} totalCount={anoOfRecords}
+                                    pageSize={alimitValue} onPageChange={page => acurPage(page)} />
+                            </div>
                         </div>
                     </div>
                     </>

@@ -73,7 +73,7 @@ function MyProfile() {
 
                         setTrainerProfileImagePreview((response.data.result.profile) ? apiUrl + PORT + response.data.result.profile : TrainerProfileImage_URL);
                         setTrainerImage((response.data.result.profile) ? apiUrl + PORT + response.data.result.profile : TrainerProfileImage_URL);
-                        debugger
+                        
                         setCoverImagePreview((response.data?.result?.coverprofile) ? apiUrl + PORT + response.data?.result?.coverprofile : CoverImage_URL);
                         setCoverImage((response.data?.result?.coverprofile) ? apiUrl + PORT + response.data?.result?.coverprofile : CoverImage_URL);
                         setImagesQuaPathList(response.data?.result?.qualifications?.path || []);
@@ -700,6 +700,7 @@ function MyProfile() {
                                                     </label>
                                                 </div>
                                             </div>
+                                            <div className="text-danger">{errors.qualification}</div>
                                             <div className="text-danger">{errors.note}</div>
                                             <div className="text-danger">{errors.image}</div>
                                         </div>

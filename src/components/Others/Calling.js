@@ -62,7 +62,7 @@ function Calling() {
         }).then(function (response) {
             if (response.data.status === 1) {
                 setFirstname(response.data?.result?.receiverData?.firstname || "Guest");
-                setProfile((apiUrl + PORT + response.data?.result?.receiverData?.profile) || "/img/videoimg.png");
+                setProfile((apiUrl + PORT + response.data?.result?.receiverData?.profile) || "/img/Small-no-img.png");
                 if (response.data?.result?.videoSessions?.statusid === 1) {
                     history.push("/videosession?mid=" + response.data?.result?.videoSessions?.meetingid);
                 } else if (response.data?.result?.videoSessions?.statusid === 2 || response.data?.result?.videoSessions?.statusid === 3) {
@@ -112,70 +112,17 @@ function Calling() {
                     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
                 </head>
                 <body>
-                    {/* <div className="wait-bg">
-                        <div className="container">
-                            <div className="col-md-12 col-12">
-                                <div className="waitpageblock">
-                                    <div className="row">
-                                        <div className="col-md-12">
-                                            <span className="wait-text">Please wait white we connect you to the {userType}</span>
-                                            <div className='loader'>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                                <div className='prong'>
-                                                    <div className='inner'></div>
-                                                </div>
-                                            </div>
-                                            <div className="">
-                                            <a className="dis-connect" href={() => false} onClick={(e) => { e.stopPropagation(); disconnectMeeting(); }}>Disconnect</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> */}
-
-                    <div class="bg-black">
-                        <div class="col-md-12">
+                    <div className="bg-black">
+                        <div className="col-md-12">
                             <span className="wait-text">Please wait white we connect you to the {userType}</span>
-                            <div class="row">
-                                <div class="vediosession mx-auto d-block my-5 py-5">
-                                    <img src={`${profile}`} class="mt-5 w-100" alt="Profile" onError={(e) => { e.target.src = "/img/Small-no-img.png" }} />
-                                    <h3 class="text-center text-white mt-4">{firstname || "Guest"}</h3>
-                                    <p class="text-center text-white font-weight-bold">Wants to Join Session</p>
-                                    <ul class="list-inline d-flex justify-content-between">
+                            <div className="row">
+                                <div className="vediosession mx-auto d-block my-5 py-5">
+                                    {profile &&
+                                        <><img src={`${profile}`} className="mt-5 w-100" alt="Profile" onError={(e) => { e.target.src = "/img/Small-no-img.png" }} /></>
+                                    }
+                                    <h3 className="text-center text-white mt-4">{firstname || "Guest"}</h3>
+                                    <p className="text-center text-white font-weight-bold">Wants to Join Session</p>
+                                    <ul className="list-inline d-flex justify-content-between">
                                         <a className="dis-connect" href={() => false} onClick={(e) => { e.stopPropagation(); disconnectMeeting(); }}>Disconnect</a>
                                     </ul>
                                 </div>

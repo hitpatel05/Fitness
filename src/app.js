@@ -198,12 +198,12 @@ function App() {
                               <span>My Workout History</span>
                             </NavLink>
                           </li>
-                          <li className="sidebar-dropdown">
+                          {/* <li className="sidebar-dropdown">
                             <NavLink to='/videosessionhistory' onClick={(e) => { callTrainer(e, '/videosessionhistory'); }} className={({ isActive }) => isActive ? 'active' : ''}>
                               <i className="fas fa-wallet"></i>
                               <span>Video Session History</span>
                             </NavLink>
-                          </li>
+                          </li> */}
                           <li className="sidebar-dropdown">
                             <NavLink to='/purchasesession' onClick={(e) => { callTrainer(e, '/purchasesession'); }} className={({ isActive }) => isActive ? 'active' : ''}>
                               <i className="fas fa-wallet"></i>
@@ -288,7 +288,7 @@ function App() {
                                         setSerachValue(e.target.value);
                                       }
                                     }} />
-                                      <i className="fas fa-search search-i" onClick={(e) => { debugger; setSerachValue(serachText.current.value); }}></i></li>
+                                      <i className="fas fa-search search-i" onClick={(e) => { ; setSerachValue(serachText.current.value); }}></i></li>
                                   </>
                                   : <></>
                                 }

@@ -24,7 +24,7 @@ function WorkOutForm() {
         document.querySelector('.loading').classList.remove('d-none');
         axios.post(`${apiUrl}${PORT}/client/session/getworkout`, { id: Id })
             .then(response => {
-                debugger
+                
                 document.querySelector('.loading').classList.add('d-none');
                 if (response.data.status === 1) {
                     setWorkout(response?.data?.result[0]);

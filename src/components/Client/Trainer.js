@@ -1,19 +1,28 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Rating } from 'react-simple-star-rating';
 import { verifytokenCall } from '../Others/Utils.js';
 import swal from 'sweetalert';
 import { apiUrl, PORT } from '../../environment/environment';
+import { Modal } from "react-bootstrap";
+import { Collapse } from 'react-bootstrap';
 
 function Trainer({ type, flterValue }) {
-    const history = useHistory();
     const [List, setList] = useState([]);
     const [workoutList, setWorkOutList] = useState([]);
+    const [sessionBook, setSessionBook] = useState('');
     const [status, setStatus] = useState(1);
-    const [filterObj, setFilterObj] = useState({ availablestatus: status, isfilter: false, isStandardTrainers: true, ratings: "", typeOfWorkout: "", gender: "" });
+    const [filterObj, setFilterObj] = useState({ availablestatus: status, isfilter: false, isStandardTrainers: true, ratings: "1", typeOfWorkout: "", gender: "Male", type: "" });
     const [isLoader, setIsLoader] = useState(false);
-
+    const [open, setOpen] = useState(false);
+    const [sessionConfirmModal, setSessionConfirmModal] = useState(false);
+    const [confirmReqModal, setConfirmReqModal] = useState(false);
+    const [startDateStr, setStartDateStr] = useState('');
+    const [startTimeStr, setStartTimeStr] = useState('');
+    const selectedStartTime = new Date();
+    const selectedStartDate = new Date();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     useEffect(() => {
         document.body.classList.add('scrollHide');
         callToken();
@@ -61,7 +70,6 @@ function Trainer({ type, flterValue }) {
                         <div className="frame smart" id={'smart' + index} style={{ overflow: 'auto', height: '800px', scrollbarWidth: 'none' }}>
                             <ul className="items">
                                 {listitem.List.filter(tainerlist => tainerlist.availablestatus === status || status === 0).map((tainerlist, sindex) => {
-                                    // if (status === 0 || tainerlist.availablestatus === status) {
                                     return (<li key={'subkey' + sindex} className="col-12 p-0">
                                         <div title={tainerlist.firstname}>
                                             <div className="banner-img">
@@ -76,14 +84,14 @@ function Trainer({ type, flterValue }) {
                                                     <div className="banner-user">
                                                         <div className="d-sm-flex justify-content-between">
                                                             <div className="d-flex">
-                                                                <Link to={'/trainerinformation?Id=' + tainerlist._id} title={tainerlist.firstname}>
+                                                                <Link to={'/trainerinformation?Id=' + tainerlist._id} title={tainerlist.firstname} className="user-name">
                                                                     <div className="user-pro">
                                                                         <img src={`${apiUrl + PORT + tainerlist.profile}`} onError={(e) => { e.target.src = "/img/Small-no-img.png" }} alt="" />
                                                                     </div>
                                                                     <div className="">
                                                                         <span>{tainerlist.firstname}</span>
                                                                         <i className={tainerlist.availablestatus === 1 ? "fas fa-circle text-success circle-i" : (tainerlist.availablestatus === 2 ? "fas fa-circle text-danger circle-i" : "fas fa-circle text-secondary circle-i")}></i>
-                                                                        <Rating ratingValue={tainerlist.rankingtrainer} size="20" readonly="true" allowHover="false" allowHalfIcon="true" />
+                                                                        <Rating ratingValue={tainerlist.averageRating} size="20" readonly="true" allowHover="false" allowHalfIcon="true" />
                                                                         <p className="mb-0">
                                                                             {tainerlist.trainingstyle !== "" && tainerlist.trainingstyle ?
                                                                                 <span>{tainerlist.trainingstyle.substr(1, 10)}</span> : <></>
@@ -93,7 +101,15 @@ function Trainer({ type, flterValue }) {
                                                                 </Link>
                                                             </div>
                                                             <div className="">
-                                                                <Link to="/mysession" className="banner-btn">Start Training</Link>
+                                                                {(status !== 1) ?
+                                                                    <>
+                                                                        <Link to={`/mysession`} className="banner-btn">Start Training</Link>
+                                                                    </>
+                                                                    :
+                                                                    <>
+                                                                        <Link onClick={(e) => { e.preventDefault(); postSendRequest(tainerlist); }} className="banner-btn">Start Training</Link>
+                                                                    </>
+                                                                }
                                                             </div>
                                                         </div>
                                                     </div>
@@ -101,9 +117,6 @@ function Trainer({ type, flterValue }) {
                                             </div>
                                         </div>
                                     </li>)
-                                    // } else {
-                                    //         return <></>
-                                    //     }
                                 })}
                             </ul>
                         </div>
@@ -146,10 +159,6 @@ function Trainer({ type, flterValue }) {
 
         await axios.post(`${apiUrl}${PORT}/trainer/trainer/trainerlist`, obj).then(function (response) {
             if (response.data.status === 1) {
-                response.data?.result?.trainerlist.forEach(element => {
-                    var seesionrankinglist = response.data?.result?.rankinglist.filter(s => s.trainerid === element._id).map(x => x.sessionrating);
-                    element.rankingtrainer = (seesionrankinglist.length > 0) ? (((seesionrankinglist.reduce((a, v) => a = a + v.rate, 0)) / seesionrankinglist.length)) : 0;
-                });
                 response.data.result.trainerlist.bookmarktrainer = response.data?.result?.client_data?.bookmarktrainer;
                 loadData(response.data?.result?.trainerlist, status);
             }
@@ -179,27 +188,19 @@ function Trainer({ type, flterValue }) {
             });
     };
 
-    const onSubmitFilter = async () => {
+    const onSubmitFilter = async (objName, val) => {
         filterObj.isfilter = true;
+
+        var trainerfilterObj = filterObj;
+        trainerfilterObj[objName] = val;
+
+        if (val)
+            setFilterObj(prevState => ({ ...prevState, [objName]: val }));
+
         setIsLoader(true);
-        await axios.post(`${apiUrl}${PORT}/trainer/trainer/trainerlist`, filterObj).then(function (response) {
+        await axios.post(`${apiUrl}${PORT}/trainer/trainer/trainerlist`, trainerfilterObj).then(function (response) {
             if (response.data.status === 1) {
-                response.data?.result?.trainerlist.forEach(element => {
-                    var seesionrankinglist = response.data?.result?.rankinglist.filter(s => s.trainerid === element._id).map(x => x.sessionrating);
-                    element.rankingtrainer = (seesionrankinglist.length > 0) ? (((seesionrankinglist.reduce((a, v) => a = a + v.rate, 0)) / seesionrankinglist.length)) : 0;
-                });
                 response.data.result.trainerlist.bookmarktrainer = response.data?.result?.client_data?.bookmarktrainer;
-                if (filterObj?.ratings) {
-                    if (filterObj?.ratings === "Ascending") {
-                        response.data?.result?.trainerlist.sort((a, b) => {
-                            return a.rankingtrainer > b.rankingtrainer;
-                        });
-                    } else {
-                        response.data?.result?.trainerlist.sort((a, b) => {
-                            return a.rankingtrainer < b.rankingtrainer;
-                        });
-                    }
-                }
                 loadData(response.data?.result?.trainerlist, status);
             }
             else {
@@ -216,13 +217,76 @@ function Trainer({ type, flterValue }) {
         });
     }
 
-    const handleChange = (objName, val) => {
-        if (objName === "isEliteTrainers")
-            setFilterObj(prevState => ({ ...prevState, "isStandardTrainers": false }));
-        else {
-            if (val)
-                setFilterObj(prevState => ({ ...prevState, [objName]: val }));
+    const postSendRequest = async (trainer_data) => {
+        let isSubmit = true;
+        if (isSubmit) {
+
+            var sTime = selectedStartTime;
+            var endTime = new Date(selectedStartTime);
+            endTime = new Date(endTime.setMinutes(endTime.getMinutes() + 60));
+
+            var ssdate = new Date(selectedStartDate);
+            ssdate.setHours(sTime.getHours());
+            ssdate.setMinutes(sTime.getMinutes());
+
+            var endate = new Date(selectedStartDate);
+            endate.setHours(endTime.getHours());
+            endate.setMinutes(endTime.getMinutes());
+            let obj = {
+                'trainerid': trainer_data._id,
+                'date': selectedStartDate,
+                'starthour': formatDate(sTime),
+                'endhour': formatDate(endTime),
+                'startdatetime': ssdate,
+                'enddatetime': endate
+            }
+
+            setStartDateStr(selectedStartDate.getDate() + ' ' + monthNames[selectedStartDate.getMonth()]);
+            setStartTimeStr(sTime.getHours() + ':' + sTime.getMinutes() + ' - ' + endTime.getHours() + ':' + endTime.getMinutes());
+            setSessionBook(trainer_data?.firstname);
+
+            setIsLoader(true);
+            await axios.post(`${apiUrl}${PORT}/client/session/sessionrequest`, obj, {
+            }).then(function (response) {
+                setIsLoader(false);
+                if (response.data.status === 1) {
+                    setConfirmReqModal(true);
+                }
+                else {
+                    swal({
+                        title: "Error!",
+                        text: response.data.message,
+                        icon: "error",
+                        button: true
+                    })
+                }
+            }).catch(function (error) {
+                console.log(error);
+                setIsLoader(false);
+            });
         }
+    }
+
+    function formatDate(idate) {
+        var d = new Date(idate);
+        var hh = d.getHours();
+        var m = d.getMinutes();
+        var s = d.getSeconds();
+        var dd = "AM";
+        var h = hh;
+        if (h >= 12) {
+            h = hh - 12;
+            dd = "PM";
+        }
+        if (h === 0) {
+            h = 12;
+        }
+
+        m = m < 10 ? "0" + m : m;
+        s = s < 10 ? "0" + s : s;
+        h = h < 10 ? "0" + h : h;
+
+        return (h + ":" + m + ":" + s + " " + dd)
     }
 
     return (
@@ -231,6 +295,35 @@ function Trainer({ type, flterValue }) {
                 <div className="mainloader"></div>
             </div>
         }
+
+            <Collapse in={open}>
+                <div id="session-book">
+                    <div className="col-md-6 col-12 mx-auto">
+                        <div>
+                            <div className="session-book">
+                                <div className="row">
+                                    <div className="col-md-2 col-12 text-center" onClick={() => { setOpen(false); }}>
+                                        <i className="far fa-check-circle check-s"></i>
+                                    </div>
+                                    <div className="col-md-10 col-12">
+                                        <div className="row">
+                                            <div className="col-12">
+                                                <span className="float-md-left">Session Booked!</span>
+                                                <span className="float-md-right">{startDateStr}</span>
+                                            </div>
+                                            <div className="col-12 session-text">
+                                                <span className="float-md-left">Cross-Fit with {sessionBook}</span>
+                                                <span className="float-md-right">{startTimeStr}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Collapse>
+
             <div className="container-fluid">
                 <div className="col-12 p-0">
                     <div className="row mb-3">
@@ -250,11 +343,11 @@ function Trainer({ type, flterValue }) {
                             <div className="row filter-box">
                                 <div className="col-md-5 col-12 mb-3">
                                     <div className="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" id="customRadioInline1" name="customRadioInline1" className="custom-control-input" onChange={(e) => { handleChange("isStandardTrainers", e.currentTarget.checked) }} />
+                                        <input type="radio" id="customRadioInline1" name="customRadioInline1" className="custom-control-input" onChange={(e) => { onSubmitFilter("type", (e.currentTarget.checked === true ? "Standard" : "ELite")) }} />
                                         <label className="custom-control-label" htmlFor="customRadioInline1">Standard Trainers</label>
                                     </div>
                                     <div className="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" id="customRadioInline2" name="customRadioInline1" className="custom-control-input" onChange={(e) => { handleChange("isEliteTrainers", e.currentTarget.checked) }} />
+                                        <input type="radio" id="customRadioInline2" name="customRadioInline1" className="custom-control-input" onChange={(e) => { onSubmitFilter("type", (e.currentTarget.checked === true ? "ELite" : "Standard")) }} />
                                         <label className="custom-control-label" htmlFor="customRadioInline2">Elite Trainers</label>
                                     </div>
                                 </div>
@@ -263,16 +356,16 @@ function Trainer({ type, flterValue }) {
                                         <div className="col-md-3 col-12">
                                             <div className="position-relative">
                                                 <label>Ratings</label>
-                                                <select className="input-box" onChange={(e) => { handleChange("ratings", e.target.value) }}>
-                                                    <option>Ascending</option>
-                                                    <option>Descending </option>
+                                                <select className="input-box" onChange={(e) => { onSubmitFilter("ratings", e.target.value) }}>
+                                                    <option value={1}>Ascending</option>
+                                                    <option value={-1}>Descending </option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div className="col-md-3 col-12">
                                             <div className="position-relative">
                                                 <label>Type Of Workout</label>
-                                                <select className="input-box" onChange={(e) => { handleChange("typeOfWorkout", e.target.value) }}>
+                                                <select className="input-box" onChange={(e) => { onSubmitFilter("typeOfWorkout", e.target.value) }}>
                                                     <option>Choose Workout</option>
                                                     {workoutList.map(({ _id, name }, index1) => <option key={'wprkoptionkey' + index1} value={_id} >{name}</option>)}
                                                 </select>
@@ -281,15 +374,14 @@ function Trainer({ type, flterValue }) {
                                         <div className="col-md-3 col-12">
                                             <div className="position-relative">
                                                 <label>Gender</label>
-                                                <select className="input-box" onChange={(e) => { handleChange("gender", e.target.value) }}>
+                                                <select className="input-box" onChange={(e) => { onSubmitFilter("gender", e.target.value) }}>
                                                     <option>Male</option>
                                                     <option>Female</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div className="col-md-3 col-12">
-                                            <div className="training_btn bg-transparent text-primary mb-3" onClick={() => { onSubmitFilter() }}>Submit</div>
-                                            <div className="training_btn" onClick={() => { setFilterObj({ availablestatus: status, isfilter: false, isStandardTrainers: true, ratings: "", typeOfWorkout: "", gender: "" }); GetList(status) }}>Cancel</div>
+                                            <div className="training_btn mt-4" onClick={() => { setFilterObj({ availablestatus: status, isfilter: false, isStandardTrainers: true, ratings: "", typeOfWorkout: "", gender: "" }); GetList(status) }}>Cancel</div>
                                         </div>
                                     </div>
                                 </div>
@@ -301,6 +393,26 @@ function Trainer({ type, flterValue }) {
                     </div>
                 </div>
             </div>
+
+
+            <Modal show={confirmReqModal} onHide={(e) => { setConfirmReqModal(false); }} className="mbody sessiondetail" size="md" scrollable={true} aria-labelledby="contained-modal-title-vcenter" centered>
+                <Modal.Header className="bg-transparent text-dark border-0 session-m" closeButton>
+                    <Modal.Title></Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="pt-2">
+                    <div className="col-md-12 col-12 text-center" onClick={() => {
+                        setConfirmReqModal(false);
+                        setTimeout(() => {
+                            setOpen(false)
+                        }, 5000);
+                    }}>
+                        <button className="checkbtn" onClick={() => setOpen(true)} aria-controls="session-book" data-dismiss="modal" aria-expanded={open}>
+                            <i className="far fa-check-circle check-i"></i>
+                            <h4 className="book-title">Awaiting confirmation from Trainer.</h4>
+                        </button>
+                    </div>
+                </Modal.Body>
+            </Modal>
         </>
     );
 }

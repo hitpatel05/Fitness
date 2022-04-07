@@ -161,15 +161,16 @@ function TrainerInformation() {
             }
 
             setStartDateStr(startDate.getDate() + ' ' + monthNames[startDate.getMonth()]);
-            setStartTimeStr(startTime.getHours()+':'+startTime.getMinutes() + ' - ' + endTime.getHours()+':'+endTime.getMinutes());
+            setStartTimeStr(startTime.getHours() + ':' + startTime.getMinutes() + ' - ' + endTime.getHours() + ':' + endTime.getMinutes());
 
             document.querySelector('.loading').classList.remove('d-none');
             await axios.post(`${apiUrl}${PORT}/client/session/sessionrequest`, obj, {
             }).then(function (response) {
-                formatDate(temptime.setMinutes(temptime.getMinutes() - 60))
+                /* formatDate(temptime.setMinutes(temptime.getMinutes() - 60)) */
                 $(".modal-backdrop").hide();
                 document.querySelector('.loading').classList.add('d-none');
                 if (response.data.status === 1) {
+                    setIsTAndC(false);
                     setSessionReqModal(false);
                     setConfirmReqModal(true);
                 }
@@ -370,7 +371,7 @@ function TrainerInformation() {
                                                 <span className="float-md-right">{startDateStr}</span>
                                             </div>
                                             <div className="col-12 session-text">
-                                                <span className="float-md-left">Cross-Fit</span>
+                                                <span className="float-md-left">Cross-fit with {list.firstname}</span>
                                                 <span className="float-md-right">{startTimeStr}</span>
                                             </div>
                                         </div>
@@ -514,11 +515,11 @@ function TrainerInformation() {
                                                 <div className="col-12">
                                                     <div className="row">
                                                         {srlist?.length > 0 &&
-                                                            srlist?.map((item,i) => {
+                                                            srlist?.map((item, i) => {
                                                                 return (<div key={'workout_' + i} className="col-md-4 col-12">
                                                                     <div className="history_block">
                                                                         <div className="d-flex justify-content-between mb-2">
-                                                                            <h4>Cross-fit</h4>
+                                                                            <h4>Strength with {item.trainer_data.firstname}</h4>
                                                                             <Link to={'/workoutform?Id=' + item._id}><span className="work_btn">View Workout</span></Link>
                                                                         </div>
                                                                         <div className="crossfit-t">
@@ -545,7 +546,33 @@ function TrainerInformation() {
                 </div>
             </div>
 
-            <div className={`modal fade ${sessionReqModal === false ? "" : "show"}`} style={{ display: `${sessionReqModal === false ? "none" : "block"}` }} id="send-request" role="dialog">
+            <Modal show={sessionReqModal} onHide={() => { setSessionReqModal(false); }} className="searchtrainer" size="md" scrollable={true} aria-labelledby="contained-modal-title-vcenter" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Your booking details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="col-md-12 col-12">
+                        <div className="history_block mb-4">
+                            <h4 className="mb-3">Cross-Fit</h4>
+                            <div className="crossfit-t">
+                                <div className="mb-1"><i className="far fa-calendar pr-2"></i><span>{startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-')}</span></div>
+                                <div className="mb-1"><i className="far fa-clock pr-2"></i><span>{startTime.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span></div>
+                                <div><i className="fas fa-map-marker-alt pr-2"></i><span>Online (Workout from home)</span></div>
+                            </div>
+                        </div>
+                        <div className="filter-box custom-control custom-checkbox mb-4">
+                            <input type="checkbox" className="custom-control-input" id="bookcheck1" value={IsTAndC} checked={IsTAndC} name="example2" onChange={(e) => { handleTAndC(e) }} />
+                            <label className="custom-control-label" htmlFor="bookcheck1">
+                                I agree to the <Link to='/cancellationpolicy' className="text-gray">Cancel/ Rescheduling Policy.</Link>
+                            </label>
+                            <div className="text-danger">{errors.isAgree}</div>
+                        </div>
+                        <div className="training_btn" onClick={(e) => { e.preventDefault(); postSendRequest() }}>Send Request</div>
+                    </div>
+                </Modal.Body>
+            </Modal>
+
+            {/* <div className={`modal fade ${sessionReqModal === false ? "" : "show"}`} style={{ display: `${sessionReqModal === false ? "none" : "block"}` }} id="send-request" role="dialog">
                 <div className="modal-dialog modal-dialog-centered mbody" role="document">
                     <div className="modal-content">
                         <button type="button" onClick={() => { setSessionReqModal(false); }} className="close" data-dismiss="modal" aria-label="Close">
@@ -563,7 +590,7 @@ function TrainerInformation() {
                                     </div>
                                 </div>
                                 <div className="filter-box custom-control custom-checkbox mb-4">
-                                    <input type="checkbox" className="custom-control-input" id="bookcheck1" name="example2" onChange={(e) => { handleTAndC(e) }} />
+                                    <input type="checkbox" className="custom-control-input" id="bookcheck1" value={IsTAndC} checked={IsTAndC} name="example2" onChange={(e) => { handleTAndC(e) }} />
                                     <label className="custom-control-label" htmlFor="bookcheck1">
                                         I agree to the <Link to='/cancellationpolicy' className="text-gray">Cancel/ Rescheduling Policy.</Link>
                                     </label>
@@ -574,7 +601,7 @@ function TrainerInformation() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             <Modal show={confirmReqModal} onHide={confirmReqModalClose} className="searchtrainer" size="md" scrollable={true} aria-labelledby="contained-modal-title-vcenter" centered>
                 {/* <Modal.Header className="bg-transparent text-dark border-0 session-m" closeButton>
@@ -584,7 +611,13 @@ function TrainerInformation() {
                     <span aria-hidden="true">&times;</span>
                 </button>
                 <Modal.Body>
-                    <div className="col-md-12 col-12 text-center">
+                    <div className="col-md-12 col-12 text-center"
+                        onClick={() => {
+                            setConfirmReqModal(false);
+                            setTimeout(() => {
+                                setOpen(false)
+                            }, 5000);
+                        }}>
                         <button className="checkbtn" onClick={() => ShowSessionBooked()} aria-controls="session-book" data-dismiss="modal" aria-expanded={open}>
                             <i className="far fa-check-circle check-i"></i>
                             <h4 className="book-title">Awaiting confirmation from Trainer.</h4>

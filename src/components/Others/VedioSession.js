@@ -85,12 +85,11 @@ function Videosession() {
             height: 500,
             configOverwrite: {
                 prejoinPageEnabled: false,
-                startWithVideoMuted: false,
-                startWithAudioMuted: false,
-                // startAudioMuted: 0,
-                // startVideoMuted: 0
+                startWithVideoMuted: 2,
+                startWithAudioMuted: 2,
+                startAudioMuted:0,
+                startVideoMuted:0
             },
-            interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ['info', 'tileview', 'camera', 'microphone', 'closedcaptions', 'embedmeeting', 'fullscreen', 'fodeviceselection', 'profile', 'chat', 'recording', 'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'feedback', 'stats', 'shortcuts', 'tileview', 'select-background', 'download', 'help', 'mute-everyone', 'mute-video-everyone', 'hangup', 'videobackgroundblur', 'videoquality', 'raisehand'] },
             userInfo: {
                 displayName: (loginUser?.firstname || "Guest")
             },
@@ -99,7 +98,7 @@ function Videosession() {
         api = new window.JitsiMeetExternalAPI(domain, options);
         api.addEventListeners({
             participantJoined: function () {
-                debugger
+                
                 var plist = api.getParticipantsInfo();
                 console.log(plist);
             }
