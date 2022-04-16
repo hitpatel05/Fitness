@@ -30,6 +30,7 @@ function ScheduleRequest() {
     const rejectRequestClose = () => setSessionResponseModal(false);
     useEffect(() => {
         callToken();
+        PendingcallToken();
         //fetchList(false, null);
         getrequestsessionList(1, false, null);
         getacceptsessionList(1);
@@ -41,18 +42,26 @@ function ScheduleRequest() {
         verifytokenCall();
         setTimeout(() => {
             callToken();
-        }, 3000);
+        }, 5000);
     }
-
+    const PendingcallToken = () => {
+        verifyPendingRequestCall();
+        setTimeout(() => {
+            PendingcallToken();
+        }, 15000);
+    }
+    const verifyPendingRequestCall = async () => {
+        getrequestsessionList(apageNum, false, null);
+    }
     const getrequestsessionList = async (val, bolval, objdata) => {
-        setIsLoader(true);
+        //setIsLoader(true);
         var obj = {
             limitValue: rlimitValue,
             pageNumber: (val || rpageNum)
         };
         await axios.post(`${apiUrl}${PORT}/trainer/session/getPendingRequest`, obj, {}
         ).then(function (response) {
-            setIsLoader(false);
+            //setIsLoader(false);
             if (response.data.status === 1) {
                 if (response?.data?.result) {
                     setrNoOfRecords(response.data?.result[0]?.totalCount[0]?.count || 0);
@@ -62,12 +71,14 @@ function ScheduleRequest() {
                     setRequestList([]);
                 }
                 if (bolval) {
-                    callingRequest(objdata);
+                    if (objdata?.requestType === 1) {
+                        callingRequest(objdata);
+                    }
                 }
             }
             return response;
         }).catch(function (error) {
-            setIsLoader(false);
+            //setIsLoader(false);
             window.alert(error);
         });
     }

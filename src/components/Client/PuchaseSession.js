@@ -67,11 +67,12 @@ function PurchaseSession() {
                                         <form>
                                             {list.length > 0 ?
                                                 list.map((ele, index) => {
+                                                    debugger
                                                     if (ele.plantype === "Stander") {
                                                         return (<div key={'index' + index} className="form-group">
                                                             <input checked={plan === `S-1-${ele.noofsession}`} onChange={(e) => { OnchnagePlan(e, ele); }} value={`S-1-${ele.noofsession}`} id={`Standard${index}`} type="radio" name="custom-radio-btn" />
                                                             <label className="custom-radio" htmlFor={`Standard${index}`}></label>
-                                                            <span className="label-text">{ele.noofsession} Sessions<span className="float-right">${ele.amount}<span className="text-gray font-13"></span></span></span>
+                                                            <span className="label-text">{ele.noofsession === '1' ? 'Single' : ele.noofsession} Sessions<span className="float-right">${ele.amount}<span className="text-gray font-13"></span></span></span>
                                                         </div>
                                                         );
                                                     } else {
@@ -115,7 +116,7 @@ function PurchaseSession() {
                                                         return (<div key={'index' + index} className="form-group">
                                                             <input checked={plan === `E-1-${ele.noofsession}`} onChange={(e) => { OnchnagePlan(e, ele); }} value={`E-1-${ele.noofsession}`} id={`Elite${index}`} type="radio" name="custom-radio-btn" />
                                                             <label className="custom-radio" htmlFor={`Elite${index}`}></label>
-                                                            <span className="label-text">{ele.noofsession} Sessions<span className="float-right">${ele.amount}<span className="text-gray font-13"></span></span></span>
+                                                            <span className="label-text">{ele.noofsession === '1' ? 'Single' : ele.noofsession} Sessions<span className="float-right">${ele.amount}<span className="text-gray font-13"></span></span></span>
                                                         </div>
                                                         );
                                                     } else {
@@ -162,7 +163,7 @@ function PurchaseSession() {
                                             <span className="text-primary">Plan : </span><span><a href={() => false} className="text-primary font-weight-bold"> {planDetail.planType}</a></span>
                                         </div>
                                         <dikv className="col-md-3">
-                                            <span className="text-primary">Sessions :</span><span className="text-primary font-weight-bold"> {planDetail.sessions}</span>
+                                            <span className="text-primary">Sessions :</span><span className="text-primary font-weight-bold"> {planDetail.sessions === '1' ? 'Single' : planDetail.sessions}</span>
                                         </dikv>
                                         <div className="col-md-3">
                                             <span className="text-primary">Total :</span><span className="text-success font-weight-bold"> ${planDetail.amount}</span>

@@ -37,7 +37,6 @@ function TrainerInformation() {
     //const [selectedStartDate, setSelectedStartDate] = useState(new Date());
     //const [certificationsList, setCertificationsList] = useState();
     const calculateMinTime = date => isSameDay(date, new Date()) ? new Date() : startOfToday()
-    const nowTime = calculateMinTime(new Date());
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const queryStringPara = new URLSearchParams(window.location.search);
     let Id = queryStringPara.get("Id");
@@ -157,7 +156,8 @@ function TrainerInformation() {
                 'starthour': formatDate(sTime),
                 'endhour': formatDate(endTime),
                 'startdatetime': ssdate,
-                'enddatetime': endate
+                'enddatetime': endate,
+                'requestType':0
             }
 
             setStartDateStr(startDate.getDate() + ' ' + monthNames[startDate.getMonth()]);

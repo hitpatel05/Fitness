@@ -1,7 +1,6 @@
 import axios from 'axios';
 import $ from 'jquery';
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { apiUrl, PORT } from '../../environment/environment';
 import { verifytokenCall } from '../Others/Utils.js';
 import swal from 'sweetalert';

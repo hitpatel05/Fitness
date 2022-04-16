@@ -9,6 +9,11 @@ function SessionDetails() {
     const history = useHistory();
     const [errors, setErrors] = useState({});
     const [sessionId, setSessionId] = useState();
+    const [weightList, setWeight] = useState([]);
+    const [restDurationList, setRestDuration] = useState([]);
+    const [setsList, setSets] = useState([]);
+    const [repsList, setReps] = useState([]);
+    const [isLoader, setIsLoader] = useState(false);
     const queryStringPara = new URLSearchParams(window.location.search);
     let sesId = queryStringPara.get("id");
 
@@ -27,6 +32,7 @@ function SessionDetails() {
     useEffect(() => {
         setSessionId(sesId);
         callToken();
+        GetMasterList();
     }, [sesId])
 
     const callToken = () => {
@@ -46,6 +52,37 @@ function SessionDetails() {
         }
         handleChange("desiredOne", desiredOneArr);
     }
+
+    async function GetMasterList() {
+        setIsLoader(true);
+        await axios.get(`${apiUrl}${PORT}/admin/getmovementlist`).then(function (response) {
+            setIsLoader(false);
+            if (response.data.status === 1) {
+                if (response?.data?.result) {
+                    setWeight(response?.data?.result.filter(x => x?.name == 'Weight'));
+                    setRestDuration(response?.data?.result.filter(x => x?.name == 'RestDuration'));
+                    setSets(response?.data?.result.filter(x => x?.name == 'Sets'));
+                    setReps(response?.data?.result.filter(x => x?.name == 'Reps'));
+                }
+            }
+            else {
+                swal({
+                    title: "Error!",
+                    text: response.data.message,
+                    icon: "error",
+                    button: true
+                })
+            }
+        }).catch(function (error) {
+            setIsLoader(false);
+            swal({
+                title: "Error!",
+                text: error,
+                icon: "error",
+                button: true
+            })
+        });
+    };
 
     const [desiredTwoArr, setDesiredTwoArr] = useState([]);
     const changeDesiredTwo = (bool, value) => {
@@ -115,10 +152,10 @@ function SessionDetails() {
         workout.createdate = new Date();
         setErrors(errormsg);
         if (isValid) {
-            document.querySelector('.loading').classList.remove('d-none');
+            setIsLoader(true);
             axios.post(`${apiUrl}${PORT}/trainer/session/workout`, workout)
                 .then(response => {
-                    document.querySelector('.loading').classList.add('d-none');
+                    setIsLoader(false);
                     if (response.data.status === 1) {
                         swal({
                             title: "Success!",
@@ -141,16 +178,18 @@ function SessionDetails() {
                     }
                 }
                 ).catch(function (error) {
-                    document.querySelector('.loading').classList.add('d-none');
+                    setIsLoader(false);
                 });
         }
     }
     return (
         <>
-            <div className="container-fluid">
-                <div className="loading d-none">
+            {isLoader &&
+                <div className="loading">
                     <div className="mainloader"></div>
                 </div>
+            }
+            <div className="container-fluid">
                 <div className="fixedblock">
                     <h1 className="main_title mb-3">Workout From</h1>
                     <div className="row">
@@ -313,7 +352,9 @@ function SessionDetails() {
                                                     <label>Weight</label>
                                                     <select className="input-box cursor-pointer" placeholder="Select weight" onChange={(e) => { handleDyanamicVal(ele.movementName, "weight", e.target.value) }}>
                                                         <option value=''>Select weight</option>
-                                                        <option value="1 Kg">1 Kg</option>
+                                                        {weightList.length > 0 && weightList.map((w) => {
+                                                            return <option value={w.value}>{w.name}</option>
+                                                        })}
                                                     </select>
                                                     <i className="fas fa-chevron-down arrow_i"></i>
                                                 </div>
@@ -321,7 +362,9 @@ function SessionDetails() {
                                                     <label>Rest Duration</label>
                                                     <select className="input-box cursor-pointer" placeholder="Select rest duration" onChange={(e) => { handleDyanamicVal(ele.movementName, "restDuration", e.target.value) }}>
                                                         <option value=''>Select rest duration </option>
-                                                        <option value='10 mins'>10 mins</option>
+                                                        {restDurationList.length > 0 && restDurationList.map((w) => {
+                                                            return <option value={w.value}>{w.name}</option>
+                                                        })}
                                                     </select>
                                                 </div>
                                             </div>
@@ -330,7 +373,9 @@ function SessionDetails() {
                                                     <label>Sets</label>
                                                     <select className="input-box cursor-pointer" placeholder="Select sets" onChange={(e) => { handleDyanamicVal(ele.movementName, "sets", e.target.value) }}>
                                                         <option value=''>Select sets</option>
-                                                        <option value='sets'>Sets</option>
+                                                        {setsList.length > 0 && setsList.map((w) => {
+                                                            return <option value={w.value}>{w.name}</option>
+                                                        })}
                                                     </select>
                                                     <i className="fas fa-chevron-down arrow_i"></i>
                                                 </div>
@@ -338,7 +383,9 @@ function SessionDetails() {
                                                     <label>Reps</label>
                                                     <select className="input-box cursor-pointer" placeholder="Select reps" onChange={(e) => { handleDyanamicVal(ele.movementName, "reps", e.target.value) }}>
                                                         <option value=''>Select reps</option>
-                                                        <option value='reps'>Reps</option>
+                                                        {repsList.length > 0 && repsList?.map((w) => {
+                                                            return <option value={w.value}>{w.name}</option>
+                                                        })}
                                                     </select>
                                                 </div>
                                             </div>

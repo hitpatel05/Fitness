@@ -172,7 +172,7 @@ function ClientPayment() {
                                                         <h6>Plan</h6>
                                                     </div>
                                                     <div className="col-md-6">
-                                                        <p className="text-right">{purchasePlan.planType} ({purchasePlan.sessions} sessions)</p>
+                                                        <p className="text-right">{purchasePlan.planType} ({purchasePlan.sessions === '1' ? "Single" : purchasePlan.sessions} sessions)</p>
                                                     </div>
                                                 </div>
                                             </div>

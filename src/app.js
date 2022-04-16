@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, NavLink, Route, useHistory } from 'react-router-dom';
 import CancellationPolicy from "./components/CancellationPolicy";
 import BookSessionsDetail from "./components/Client/BookSessionsDetail";
@@ -21,9 +21,9 @@ import Calling from "./components/Others/Calling";
 import Incoming from "./components/Others/Incoming";
 import VideoSession from "./components/Others/VedioSession";
 import Videosessionhistory from './components/Others/vediosessionhistory';
+import ClientProfile from './components/Profile/ClientProfile';
 import EditProfile from './components/Profile/EditProfile';
 import MyProfile from './components/Profile/MyProfile';
-import ClientProfile from './components/Profile/ClientProfile';
 import Notifications from './components/Profile/Notifications';
 import TrainerInformation from './components/Profile/TrainerInformation';
 import ViewPhoto from './components/Profile/ViewPhoto';
@@ -162,7 +162,7 @@ function App() {
                   <div className="sidebar-header">
                     {(usertype === "client") ?
                       <>
-                        <NavLink to="/trainer" onClick={(e) => { callTrainer(e, '/trainer'); }} className={({ isActive }) => isActive ? 'active' : ''}><img src="/img/KNKTLogo.png" alt="logo" /></NavLink>
+                        <NavLink to="/trainer?status=1" onClick={(e) => { callTrainer(e, '/trainer'); }} className={({ isActive }) => isActive ? 'active' : ''}><img src="/img/KNKTLogo.png" alt="logo" /></NavLink>
                       </>
                       :
                       <>
@@ -175,7 +175,7 @@ function App() {
                       {(usertype === "client") ?
                         <>
                           <li className="sidebar-dropdown">
-                            <NavLink to='/trainer' onClick={(e) => { callTrainer(e, '/trainer'); }} className={({ isActive }) => isActive ? 'active' : ''}>
+                            <NavLink to='/trainer?status=1' onClick={(e) => { callTrainer(e, '/trainer'); }} className={({ isActive }) => isActive ? 'active' : ''}>
                               <i className="fas fa-home"></i>
                               <span>Trainers</span>
                             </NavLink>
@@ -243,12 +243,12 @@ function App() {
                               <span>Payment History</span>
                             </NavLink>
                           </li>
-                          <li className="sidebar-dropdown">
+                          {/* <li className="sidebar-dropdown">
                             <NavLink to='/videosessionhistory' onClick={(e) => { callTrainer(e, '/videosessionhistory'); }} className={({ isActive }) => isActive ? 'active' : ''}>
                               <i className="fas fa-wallet"></i>
                               <span>Video Session History</span>
                             </NavLink>
-                          </li>
+                          </li> */}
                           <li className="sidebar-dropdown">
                             <NavLink to='/termsncondition' onClick={(e) => { callTrainer(e, '/termsncondition'); }} className={({ isActive }) => isActive ? 'active' : ''}>
                               <i className="far fa-file-alt"></i>

@@ -5,9 +5,13 @@ import { Rating } from 'react-simple-star-rating';
 import swal from 'sweetalert';
 import { apiUrl, PORT } from '../../environment/environment';
 import { verifytokenCall } from '../Others/Utils.js';
+import Pagination from '../Pagination/Pagination';
 function SavedTrainer({ type, flterValue }) {
     const [List, setList] = useState([]);
     const [bookmarkTrainerList, setbookmarkTrainerList] = useState([]);
+    const [pageNum, setPageNum] = useState(1);
+    const [noOfRecords, setNoOfRecords] = useState(0);
+    const limitValue = 6;
     function initScroll() {
         // $(".smart").each(function () {
         //     var $frame = $(this);
@@ -87,7 +91,7 @@ function SavedTrainer({ type, flterValue }) {
     //Onload event set here.
     useEffect(() => {
         callToken();
-        GetList(0);
+        GetList(1);
         //initScroll();
         scrollBody();
     }, []);
@@ -97,13 +101,14 @@ function SavedTrainer({ type, flterValue }) {
             callToken();
         }, 3000);
     }
-    // const handleOnError = (e) => {
-    //     e.target.src = "/img/user-1.jpg";
-    // }
+    const curPage = (pageNum) => {
+        setPageNum(pageNum);
+        GetList(pageNum);
+    }
     const scrollBody = (event) => {
         document.body.classList.add('scrollHide');
     }
-    const loadData = async (list, status) => {
+    const loadData = async (list) => {
         let finalList = [];
         //Make array of 3 sections
         for (var i = 0; i < 3; i++) {
@@ -137,7 +142,7 @@ function SavedTrainer({ type, flterValue }) {
                         <div className="frame smart" id={'smart' + index} style={{ height: 'auto', scrollbarWidth: 'none' }}>
                             <ul key={'mainulkey' + index} className="items">
                                 {listitem.List.map((tainerlist, sindex) => {
-                                    if (status === 0 || tainerlist.availablestatus === status) {
+                                    //if (status === 0 || tainerlist.availablestatus === status) {
                                         return <><li key={'subkey' + sindex} className="col-12 p-0">
                                             <Link to={'/trainerinformation?Id=' + tainerlist._id} title={tainerlist.firstname}>
                                                 <div className="banner-img">
@@ -146,7 +151,7 @@ function SavedTrainer({ type, flterValue }) {
                                                     <div className="img-content">
                                                         <div className="banner-i d-flex justify-content-between">
                                                             <span>{tainerlist.type || ''}</span>
-                                                            <button className="bookmark" onClick={(e) => { e.preventDefault(); bookmarkTainer(tainerlist, status); }}>
+                                                            <button className="bookmark" onClick={(e) => { e.preventDefault(); bookmarkTainer(tainerlist); }}>
                                                                 <i className={`${(listitem.bookmarktrainerList.filter(f => f === tainerlist._id).length > 0) ? "fa" : "far"} fa-bookmark`}></i>
                                                             </button>
                                                         </div>
@@ -165,12 +170,6 @@ function SavedTrainer({ type, flterValue }) {
                                                                         <span>{tainerlist.firstname}</span>
                                                                         <i className={tainerlist.availablestatus === 1 ? "fas fa-circle text-success circle-i" : (tainerlist.availablestatus === 2 ? "fas fa-circle text-danger circle-i" : "fas fa-circle text-secondary circle-i")}></i>
                                                                         <Rating initialValue="3.5" size="17" readonly="true" allowHover="false" allowHalfIcon="true" />
-                                                                        {/* <span className="rating">
-                                                                            <i className="fas fa-star"></i>
-                                                                            <i className="fas fa-star"></i>
-                                                                            <i className="fas fa-star"></i>
-                                                                            <i className="fas fa-star"></i>
-                                                                        </span> */}
                                                                         <p className="mb-0">
                                                                             {tainerlist.trainingstyle !== "" && tainerlist.trainingstyle ?
                                                                                 <span>{tainerlist.trainingstyle.substr(1, 10)}</span> : <></>
@@ -186,10 +185,11 @@ function SavedTrainer({ type, flterValue }) {
                                                     </div>
                                                 </div>
                                             </Link>
-                                        </li></>
-                                    } else {
-                                        return <></>
-                                    }
+                                        </li>
+                                        </>
+                                    // } else {
+                                    //     return <></>
+                                    // }
                                 })}
                             </ul>
                         </div>
@@ -199,7 +199,7 @@ function SavedTrainer({ type, flterValue }) {
             setList(updatedList);
         }
     };
-    const bookmarkTainer = async (e, status) => {
+    const bookmarkTainer = async (e) => {
         const formData = new FormData();
         formData.append('tainerId', e._id);
         document.querySelector('.loading').classList.remove('d-none');
@@ -207,7 +207,7 @@ function SavedTrainer({ type, flterValue }) {
         }).then(function (response) {
             document.querySelector('.loading').classList.add('d-none');
             if (response.data.status === 1) {
-                GetList(status);
+                GetList(1);
             }
             else {
                 swal({
@@ -223,10 +223,13 @@ function SavedTrainer({ type, flterValue }) {
             document.querySelector('.loading').classList.add('d-none');
         });
     }
-    async function GetList(status) {
+    async function GetList(val) {
+        debugger
         document.querySelector('.loading').classList.remove('d-none');
         var obj = {
-            availablestatus: status,
+            limitValue: limitValue,
+            pageNumber: (val * 1),
+            availablestatus: 0,
             bookmarkTainer: bookmarkTrainerList || [],
             name: flterValue
         };
@@ -234,7 +237,8 @@ function SavedTrainer({ type, flterValue }) {
             document.querySelector('.loading').classList.add('d-none');
             setbookmarkTrainerList(response.data?.result?.client_data?.bookmarktrainer || []);
             response.data.result.trainerlist.bookmarktrainer = response.data?.result?.client_data?.bookmarktrainer;
-            loadData(response.data?.result?.trainerlist, status);
+            loadData(response.data?.result?.trainerlist);
+            setNoOfRecords(response.data?.result?.noOfRecords || 0);
             initScroll();
         }).catch(function (error) {
             console.log(error);
@@ -318,7 +322,12 @@ function SavedTrainer({ type, flterValue }) {
                     </div>
                     <div className="row">
                         {List}
+                        <div className="col-md-12 col-sm-12 col-12 pagi_bg">
+                            <Pagination className="pagination-bar" currentPage={pageNum} totalCount={noOfRecords}
+                                pageSize={limitValue} onPageChange={page => curPage(page)} />
+                        </div>
                     </div>
+
                 </div>
             </div>
         </>

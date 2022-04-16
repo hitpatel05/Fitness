@@ -98,6 +98,7 @@ function MyProfile() {
 
     const PostEditProfile = async (e) => {
         e.preventDefault();
+        debugger
 
         let isValid = true;
         var errormsg = {};
@@ -321,6 +322,7 @@ function MyProfile() {
 
     const handleQualifications = (e) => {
         e.preventDefault();
+        debugger
         var errormsg = {};
         var isValid = true;
         if (qualification === "") {
@@ -369,6 +371,7 @@ function MyProfile() {
     }
 
     const OnQualificationFileChange = (event) => {
+        debugger
         const file_size = event.target.files[0].size;
         if (file_size > 1048000) {
             setImagesQuaPathList(null);

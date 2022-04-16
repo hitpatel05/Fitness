@@ -135,7 +135,7 @@ function MySession() {
 
         await axios.post(`${apiUrl}${PORT}/client/session/getupcommingsession`, obj, {}
         ).then(function (response) {
-            setIsLoader(false);
+            /* setIsLoader(false); */
             if (response.data.status === 1) {
                 //var tempupcomingList = [];
 

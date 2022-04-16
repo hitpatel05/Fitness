@@ -212,7 +212,8 @@ function BookSessionsDetail() {
                 'starthour': formatDate(sTime),
                 'endhour': formatDate(endTime),
                 'startdatetime': ssdate,
-                'enddatetime': endate
+                'enddatetime': endate,
+                'requestType':0
             }
 
             setStartDateStr(selectedStartDate.getDate() + ' ' + monthNames[selectedStartDate.getMonth()]);
