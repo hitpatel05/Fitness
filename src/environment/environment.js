@@ -1,21 +1,21 @@
 //For local setup
 const local = {
-    apiUrl: "https://create-node-fitness-app.herokuapp.com",
-    PORT: ""
+    apiUrl: "http://localhost:",
+    PORT: "3155"
 };
 
 //For staging server
 const staging = {
-    apiUrl: "https://create-node-fitness-app.herokuapp.com",
+    apiUrl: "http://54.201.160.69:",
     //apiUrl: "http://localhost:",
-    PORT: ""
+    PORT: "3155"
 };
 
 //For production server
 const production = {
-    apiUrl: "https://create-node-fitness-app.herokuapp.com",
+    apiUrl: "http://54.201.160.69:",
     //apiUrl: "http://localhost:",
-    PORT: ""
+    PORT: "3155"
 };
 
 if (process.env.REACT_APP_ENV === "local") module.exports = local;

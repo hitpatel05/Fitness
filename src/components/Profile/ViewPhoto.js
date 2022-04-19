@@ -6,9 +6,9 @@ import swal from 'sweetalert';
 import { verifytokenCall } from '../Others/Utils.js';
 function ViewPhoto() {
     const history = useHistory();
-    // const ProfileImage_URL = '/img/Small-no-img.png';
-    // const [profileimagepreview, setProfileImagePreview] = useState(ProfileImage_URL);
-    // const [profileimage, setProfileImage] = useState(null);
+    const ProfileImage_URL = '/img/Small-no-img.png';
+    const [profileimagepreview, setProfileImagePreview] = useState(ProfileImage_URL);
+    const [profileimage, setProfileImage] = useState(null);
     const initState = { date: new Date(), list: [], base64Img: [] };
     const [getAllPhotos, setGetAllPhotos] = useState([]);
     const [isMountRender, setMountRender] = useState(true);
@@ -31,6 +31,7 @@ function ViewPhoto() {
         axios.get(`${apiUrl}${PORT}/client/account/getprogressphotos`, {}, {}).then(function (response) {
             document.querySelector('.loading').classList.add('d-none');
             if (response.data.status === 1) {
+                debugger
                 if (response.data.result && response.data.result.length > 0) {
                     if (response.data.result.length > 0) {
                         if (response.data.result.filter(x => new Date(x.date).toLocaleDateString() === new Date().toLocaleDateString()).length === 0) {
@@ -70,11 +71,10 @@ function ViewPhoto() {
     const OnFileChange = (event, obj) => {
         const file_size = event.target.files[0].size;
         if (file_size > 1048000) {
-            // setProfileImagePreview(ProfileImage_URL);
-            // setProfileImage(null);
             alert("File size more than 1 MB. File size must under 1MB !");
             event.preventDefault();
         } else {
+            debugger
             const fileReader = new window.FileReader();
             const file = event.target.files[0];
             if (file) {
@@ -90,8 +90,8 @@ function ViewPhoto() {
                         obj.base64Img.push(result);
                         setGetAllPhotos(old => [...old, obj]);
                     }
-                    // setProfileImagePreview(result);
-                    // setProfileImage(file);
+                    setProfileImagePreview(result);
+                    setProfileImage(file);
                 };
                 fileReader.readAsDataURL(file);
             }
@@ -103,6 +103,7 @@ function ViewPhoto() {
         document.querySelector('.loading').classList.remove('d-none');
         const formData = new FormData();
         var filelist = [];
+        debugger
         for (var key in getAllPhotos[0].list) {
             if (getAllPhotos[0].list[key].type !== undefined) {
                 formData.append(getAllPhotos[0].list[key].name, getAllPhotos[0].list[key]);
@@ -110,8 +111,8 @@ function ViewPhoto() {
             } else {
                 let isCheckBase64 = getAllPhotos[0].list[key]?.indexOf('data:image/') > -1;
                 if (!isCheckBase64) {
-                    formData.append(getAllPhotos[0].list[key].name, getAllPhotos[0].list[key]);
-                    filelist.push(getAllPhotos[0].list[key].name);
+                    formData.append(getAllPhotos[0].list[key].split('/')[getAllPhotos[0].list[key].split('/').length  - 1], getAllPhotos[0].list[key]);
+                    filelist.push(getAllPhotos[0].list[key].split('/')[getAllPhotos[0].list[key].split('/').length  - 1]);
                 }
             }
         }
@@ -161,6 +162,7 @@ function ViewPhoto() {
                             <h1 className="main_title mb-4">Progress Photos</h1>
                         </div>
                         {getAllPhotos.length > 0 && getAllPhotos.map((res, index) => {
+                            debugger
                             return <div key={index} className="col-md-6 col-12">
                                 <div className="row">
                                     <div className="col-md-12 col-12 mb-4">
@@ -174,13 +176,23 @@ function ViewPhoto() {
                                             </div>
                                         </div>
                                     </div>
-                                    {res.base64Img && res.base64Img.length > 0 && res.base64Img.map((ele, index) => {
+                                    {res?.base64Img && res?.base64Img?.length > 0 && res?.base64Img.map((ele, index) => {
                                         if (ele?.type?.indexOf('image/') > -1) {
                                             return <></>
                                         } else {
                                             return <div key={index} className="col-lg-3 col-md-6 col-12 mb-2">
                                                 <div className="prog-img">
                                                     <img src={`${ele?.indexOf('data:image/') > -1 ? ele : apiUrl + PORT + ele}`} alt="img" />
+                                                </div>
+                                            </div>
+                                        }
+                                    })}
+                                    {res?.list && res?.list?.length > 0 && res?.list.map((ele, index) => {
+                                        let isFile = ele.type ? ele.type.indexOf('image') > -1 : false;
+                                        if (!isFile) {
+                                            return <div key={index} className="col-lg-3 col-md-6 col-12 mb-2">
+                                                <div className="prog-img">
+                                                    <img src={apiUrl + PORT + ele} alt="img" />
                                                 </div>
                                             </div>
                                         }

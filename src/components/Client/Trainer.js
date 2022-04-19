@@ -100,9 +100,10 @@ function Trainer({ type, flterValue }) {
                                                                         <img src={`${apiUrl + PORT + tainerlist.profile}`} onError={(e) => { e.target.src = "/img/Small-no-img.png" }} alt="" />
                                                                     </div>
                                                                     <div className="">
+                                                                        {/* <span>{tainerlist.firstname} {tainerlist.averageRating.toFixed(2)} {Math.round(tainerlist.averageRating.toFixed(2))}</span> */}
                                                                         <span>{tainerlist.firstname}</span>
                                                                         <i className={tainerlist.availablestatus === 1 ? "fas fa-circle text-success circle-i" : (tainerlist.availablestatus === 2 ? "fas fa-circle text-danger circle-i" : "fas fa-circle text-secondary circle-i")}></i>
-                                                                        <Rating ratingValue={tainerlist.averageRating} size="20" readonly="true" allowHover="false" allowHalfIcon="true" />
+                                                                        <Rating ratingValue={tainerlist.averageRating * 20} size="20" readonly="true" allowHover="false" allowHalfIcon="true" />
                                                                         <p className="mb-0">
                                                                             {tainerlist.trainingstyle !== "" && tainerlist.trainingstyle ?
                                                                                 <span>{tainerlist.trainingstyle.substr(1, 10)}</span> : <></>
@@ -195,7 +196,7 @@ function Trainer({ type, flterValue }) {
                 //setCompletedList(response.data?.result?.trainerlist[0]?.paginatedResults);
 
                 var tempList = [];
-                if (allTrainerList == null || allTrainerList == undefined || allTrainerList.length <= 0) {
+                if (allTrainerList === null || allTrainerList === undefined || allTrainerList.length <= 0) {
                     tempList = response.data?.result?.trainerlist;
                 } else {
                     if (noOfRec >= allTrainerList.length) {
@@ -461,11 +462,11 @@ function Trainer({ type, flterValue }) {
                             <div className="row filter-box">
                                 <div className="col-md-5 col-12 mb-3">
                                     <div className="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" id="customRadioInline1" name="customRadioInline1" className="custom-control-input" checked={filterObj.type == 'Standard' ? true : false} onChange={(e) => { onSubmitFilter("type", (e.currentTarget.checked === true ? "Standard" : "ELite")) }} />
+                                        <input type="radio" id="customRadioInline1" name="customRadioInline1" className="custom-control-input" checked={filterObj.type === 'Standard' ? true : false} onChange={(e) => { onSubmitFilter("type", (e.currentTarget.checked === true ? "Standard" : "ELite")) }} />
                                         <label className="custom-control-label" htmlFor="customRadioInline1">Standard Trainers</label>
                                     </div>
                                     <div className="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" id="customRadioInline2" name="customRadioInline1" className="custom-control-input" checked={filterObj.type == 'ELite' ? true : false} onChange={(e) => { onSubmitFilter("type", (e.currentTarget.checked === true ? "ELite" : "Standard")) }} />
+                                        <input type="radio" id="customRadioInline2" name="customRadioInline1" className="custom-control-input" checked={filterObj.type === 'ELite' ? true : false} onChange={(e) => { onSubmitFilter("type", (e.currentTarget.checked === true ? "ELite" : "Standard")) }} />
                                         <label className="custom-control-label" htmlFor="customRadioInline2">Elite Trainers</label>
                                     </div>
                                 </div>
@@ -486,7 +487,7 @@ function Trainer({ type, flterValue }) {
                                                 <label>Type Of Workout</label>
                                                 <select className="input-box" value={filterObj.typeOfWorkout} onChange={(e) => { onSubmitFilter("typeOfWorkout", e.target.value) }}>
                                                     <option>Choose Workout</option>
-                                                    {workoutList.map(({ _id, name }, index1) => <option key={'wprkoptionkey' + index1} value={_id} >{name}</option>)}
+                                                    {workoutList.map(({ _id, name }, index1) => <option key={'wprkoptionkey' + index1} value={name} >{name}</option>)}
                                                 </select>
                                             </div>
                                         </div>

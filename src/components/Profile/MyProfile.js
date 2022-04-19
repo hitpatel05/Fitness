@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { apiUrl, PORT } from '../../environment/environment';
 import swal from 'sweetalert';
@@ -30,11 +30,31 @@ function MyProfile() {
     const [trainerimagepreview, setTrainerImage] = useState(null);
     const [expVal, setExp] = useState(1);
     const [qualificationshtmllist, setHtmlQualifications] = useState([]);
+
+    const [workoutList, setWorkOutList] = useState([]);
+    const [filterWorkout, setFilterWorkout] = useState([]);
+    const [tags, settags] = useState([]);
+    const ref = useRef(null);
+    const trainingstyle = useRef('');
     useEffect(() => {
         document.body.classList.remove('scrollHide');
         callToken();
         fetchProfile();
+        getTypeOfWorkout();
+        document.addEventListener('click', handleClickOutside, true);
+        return () => {
+            document.removeEventListener('click', handleClickOutside, true);
+        };
     }, [])
+
+    const handleClickOutside = (event) => {
+        if (ref.current && !ref.current.contains(event.target)) {
+            debugger
+            trainingstyle.current = '';
+            setFilterWorkout([]);
+        }
+    };
+
     const callToken = () => {
         verifytokenCall();
         setTimeout(() => {
@@ -64,7 +84,7 @@ function MyProfile() {
                         setTrainerImage((response.data.result.profile) ? apiUrl + PORT + response.data.result.profile : TrainerProfileImage_URL);
                     }
                 } else {
-
+                    debugger
                     response.data.result.oldpassword = ""; response.data.result.password = ""; response.data.result.confirmPassword = "";
                     if (response.data.result) {
                         setUser(response.data.result);
@@ -73,10 +93,15 @@ function MyProfile() {
 
                         setTrainerProfileImagePreview((response.data.result.profile) ? apiUrl + PORT + response.data.result.profile : TrainerProfileImage_URL);
                         setTrainerImage((response.data.result.profile) ? apiUrl + PORT + response.data.result.profile : TrainerProfileImage_URL);
-                        
+
                         setCoverImagePreview((response.data?.result?.coverprofile) ? apiUrl + PORT + response.data?.result?.coverprofile : CoverImage_URL);
                         setCoverImage((response.data?.result?.coverprofile) ? apiUrl + PORT + response.data?.result?.coverprofile : CoverImage_URL);
                         setImagesQuaPathList(response.data?.result?.qualifications?.path || []);
+
+                        const newTags = response.data?.result?.trainingstyle.split(',');
+                        settags(newTags);
+                        trainingstyle.current = '';
+                        /* setUser({ ...user, trainingstyle: '' }); */
                         //user.certifications =  response.data?.result?.qualifications?.name;
                     }
                     // setTimeout(() => {
@@ -154,7 +179,11 @@ function MyProfile() {
             errormsg.aboutus = "Please enter about us description.";
             isValid = false;
         }
-        if (user.trainingstyle === "") {
+        /* if (user.trainingstyle === "") {
+            errormsg.trainingstyle = "Please enter training style.";
+            isValid = false;
+        } */
+        if (tags.length === 0) {
             errormsg.trainingstyle = "Please enter training style.";
             isValid = false;
         }
@@ -217,7 +246,7 @@ function MyProfile() {
                 phoneno: user.phoneno,
                 gender: user.gender,
                 aboutus: user.aboutus,
-                trainingstyle: user.trainingstyle,
+                trainingstyle: tags.join(','),
                 quote: user.quote,
                 experience: parseInt(expVal),//parseInt(document.getElementById("experience").value),
                 oldpassword: user.oldpasswor || "",
@@ -329,6 +358,26 @@ function MyProfile() {
             errormsg.note = "Please enter note.";
             isValid = false;
         }
+        if (imagesQuaPathList.length === 0) {
+            errormsg.image = "Please upload image here..";
+            isValid = false;
+        }
+        if (qualificationslist.length > 0 && qualificationslist.filter(x => x === qualification).length > 0) {
+            errormsg.already = "This qualification already exist!";
+            isValid = false;
+        }
+        if (imagesQuaPathList.filter(x => x.qualification === qualification).length === 0) {
+            errormsg.image = "Please upload image here..";
+            isValid = false;
+        }
+        if (imagesQuaPathList.filter(x => x.qualification === qualification).length > 0) {
+            var objFile = imagesQuaPathList.filter(x => x.qualification === qualification);
+            if (objFile[0].uri === undefined || objFile[0].uri === null) {
+                errormsg.image = "Please upload image here..";
+                isValid = false;
+            }
+        }
+
         setErrors(errormsg);
         if (isValid) {
             qualificationslist.push(qualification);
@@ -370,9 +419,8 @@ function MyProfile() {
         setHtmlQualifications(updatedList);
     }
 
-    const OnQualificationFileChange = (event) => {
-        debugger
-        const file_size = event.target.files[0].size;
+    const OnQualificationFileChange = (event, value) => {
+        const file_size = event.target.files[0]?.size;
         if (file_size > 1048000) {
             setImagesQuaPathList(null);
             alert("File size more than 1 MB. File size must under 1MB !");
@@ -389,7 +437,8 @@ function MyProfile() {
                     "uri": file,
                     "name": file.name,
                     "type": file.type,
-                    "id": maxId
+                    "id": maxId,
+                    "qualification": value
                 });
                 setImagesQuaPathList(imagesQuaPathList);
             };
@@ -479,9 +528,66 @@ function MyProfile() {
             fileReader.readAsDataURL(file);
         }
     };
+    async function getTypeOfWorkout() {
+        document.querySelector('.loading').classList.remove('d-none');
+        await axios.get(`${apiUrl}${PORT}/trainer/trainer/getworkoutcategory`, {}, {})
+            .then(function (response) {
+                document.querySelector('.loading').classList.add('d-none');
+                if (response.data.status === 1) {
+                    setWorkOutList(response.data.result);
+                }
+                else {
+                    swal({
+                        title: "Error!",
+                        text: response.data.message,
+                        icon: "error",
+                        button: true
+                    });
+                }
+            }).catch(function (error) {
+                document.querySelector('.loading').classList.add('d-none');
+            });
+    };
+    const tagChange = (e) => {
+        setUser({ ...user, trainingstyle: e.target.value });
+        handleSuggestion();
+    };
+
+    const handleKeyDown = e => {
+        if (e.keyCode === 9) {
+            e.preventDefault();
+        }
+        handleSuggestion();
+    };
+
+    const handleSuggestion = () => {
+
+        const suggestFilterInput = workoutList.filter(suggest =>
+            suggest.name.toLowerCase().includes(user.trainingstyle?.toLowerCase())
+        );
+
+        const suggestFilterTags = suggestFilterInput.filter(
+            suggest => !tags.includes(suggest.name)
+        );
+        setFilterWorkout(suggestFilterTags);
+    };
+
+    const handleDelete = i => {
+        const newTags = tags.filter((tag, j) => i !== j);
+        settags(newTags);
+        setFilterWorkout([]);
+    };
+
+    const AddTags = text => {
+        settags([...tags, text]);
+        user.trainingstyle = '';
+        trainingstyle.current = '';
+        setUser(user);
+        setFilterWorkout([]);
+    };
     return (
         <>
-            <div className="container-fluid">
+            <div className="container-fluid" ref={ref}>
                 <div className="loading d-none">
                     <div className="mainloader"></div>
                 </div>
@@ -642,7 +748,43 @@ function MyProfile() {
                                                     <div className="text-danger">{errors.aboutus}</div>
                                                 </div>
                                                 <div className="col-md-12">
-                                                    <textarea onChange={(e) => handleInputs(e)} value={user.trainingstyle} name="trainingstyle" className="w-100 Sessionrej text-primary border-primary mb-3" placeholder="Describe your training style"></textarea>
+                                                    <div className="tags-content">
+                                                        <div>
+                                                            {tags.map((tag, i) => (
+                                                                <div key={i} className="tag">
+                                                                    {tag}
+                                                                    <div className="remove-tag" onClick={() => handleDelete(i)}>
+                                                                        ×
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className="tags-input">
+                                                            <input
+                                                                type="text"
+                                                                className="w-100 mb-4"
+                                                                value={trainingstyle.current}
+                                                                ref={trainingstyle}
+                                                                onChange={(e) => { tagChange(e) }}
+                                                                onKeyDown={(e) => { handleKeyDown(e) }}
+                                                                placeholder="Describe your training style"
+
+                                                            />
+                                                            {Boolean(filterWorkout.length) && (
+                                                                <div className="tags-suggestions">
+                                                                    {filterWorkout.map(suggest => {
+                                                                        return <div
+                                                                            className="suggestion-item"
+                                                                            onClick={() => AddTags(suggest.name)}
+                                                                        >
+                                                                            {suggest.name}
+                                                                        </div>
+                                                                    })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {/* <textarea onChange={(e) => handleInputs(e)} value={user.trainingstyle} name="trainingstyle" className="w-100 Sessionrej text-primary border-primary mb-3" placeholder="Describe your training style"></textarea> */}
                                                     <div className="text-danger">{errors.trainingstyle}</div>
                                                 </div>
                                                 <div className="col-md-12">
@@ -697,7 +839,7 @@ function MyProfile() {
                                             </div>
                                             <div className="col-md-2 mt-3">
                                                 <div className="uploadimg">
-                                                    <input type="file" id="uploadQualification" onChange={OnQualificationFileChange} accept=".png, .jpg, .jpeg, .pdf, .doc" />
+                                                    <input type="file" id="uploadQualification" onChange={(e) => { OnQualificationFileChange(e, qualification) }} accept=".png, .jpg, .jpeg, .pdf, .doc" />
                                                     <label htmlFor="uploadQualification">
                                                         <img src="/img/upload.png" alt='Upload' />
                                                     </label>
@@ -706,6 +848,7 @@ function MyProfile() {
                                             <div className="text-danger">{errors.qualification}</div>
                                             <div className="text-danger">{errors.note}</div>
                                             <div className="text-danger">{errors.image}</div>
+                                            <div className="text-danger">{errors.already}</div>
                                         </div>
                                     </div>
                                     {qualificationslist.length > 0 && qualificationslist.map((listItems, index) => {

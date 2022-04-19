@@ -143,50 +143,50 @@ function SavedTrainer({ type, flterValue }) {
                             <ul key={'mainulkey' + index} className="items">
                                 {listitem.List.map((tainerlist, sindex) => {
                                     //if (status === 0 || tainerlist.availablestatus === status) {
-                                        return <><li key={'subkey' + sindex} className="col-12 p-0">
-                                            <Link to={'/trainerinformation?Id=' + tainerlist._id} title={tainerlist.firstname}>
-                                                <div className="banner-img">
-                                                    {/* <img src={`${tainerlist.coverprofile}`} onError={(e) => { e.target.src = "/img/crossfit.jpg" }} alt="" /> */}
-                                                    <img src={`${apiUrl + PORT + tainerlist.coverprofile}`} onError={(e) => { e.target.src = "/img/Back-No-Image.png" }} alt="" />
-                                                    <div className="img-content">
-                                                        <div className="banner-i d-flex justify-content-between">
-                                                            <span>{tainerlist.type || ''}</span>
-                                                            <button className="bookmark" onClick={(e) => { e.preventDefault(); bookmarkTainer(tainerlist); }}>
-                                                                <i className={`${(listitem.bookmarktrainerList.filter(f => f === tainerlist._id).length > 0) ? "fa" : "far"} fa-bookmark`}></i>
-                                                            </button>
-                                                        </div>
-                                                        <div className="banner-user">
-                                                            <div className="d-flex justify-content-between">
-                                                                <div className="d-flex">
-                                                                    <div className="user-pro">
-                                                                        <img src={`${apiUrl + PORT + tainerlist.profile}`} onError={(e) => { e.target.src = "/img/Small-no-img.png" }} alt="" />
-                                                                        {/* {tainerlist.profile !== "" && tainerlist.profile ?
+                                    return <><li key={'subkey' + sindex} className="col-12 p-0">
+                                        <Link to={'/trainerinformation?Id=' + tainerlist._id} title={tainerlist.firstname}>
+                                            <div className="banner-img">
+                                                {/* <img src={`${tainerlist.coverprofile}`} onError={(e) => { e.target.src = "/img/crossfit.jpg" }} alt="" /> */}
+                                                <img src={`${apiUrl + PORT + tainerlist.coverprofile}`} onError={(e) => { e.target.src = "/img/Back-No-Image.png" }} alt="" />
+                                                <div className="img-content">
+                                                    <div className="banner-i d-flex justify-content-between">
+                                                        <span>{tainerlist.type || ''}</span>
+                                                        <button className="bookmark" onClick={(e) => { e.preventDefault(); bookmarkTainer(tainerlist); }}>
+                                                            <i className={`${(listitem.bookmarktrainerList.filter(f => f === tainerlist._id).length > 0) ? "fa" : "far"} fa-bookmark`}></i>
+                                                        </button>
+                                                    </div>
+                                                    <div className="banner-user">
+                                                        <div className="d-flex justify-content-between">
+                                                            <div className="d-flex">
+                                                                <div className="user-pro">
+                                                                    <img src={`${apiUrl + PORT + tainerlist.profile}`} onError={(e) => { e.target.src = "/img/Small-no-img.png" }} alt="" />
+                                                                    {/* {tainerlist.profile !== "" && tainerlist.profile ?
                                                                             <img src={`${apiUrl + PORT +tainerlist.profile}`} onError={handleOnError} alt="" />
                                                                             :
                                                                             <div>{tainerlist.firstname.substring(0, 1).toUpperCase()}</div>
                                                                         } */}
-                                                                    </div>
-                                                                    <div className="">
-                                                                        <span>{tainerlist.firstname}</span>
-                                                                        <i className={tainerlist.availablestatus === 1 ? "fas fa-circle text-success circle-i" : (tainerlist.availablestatus === 2 ? "fas fa-circle text-danger circle-i" : "fas fa-circle text-secondary circle-i")}></i>
-                                                                        <Rating initialValue="3.5" size="17" readonly="true" allowHover="false" allowHalfIcon="true" />
-                                                                        <p className="mb-0">
-                                                                            {tainerlist.trainingstyle !== "" && tainerlist.trainingstyle ?
-                                                                                <span>{tainerlist.trainingstyle.substr(1, 10)}</span> : <></>
-                                                                            }
-                                                                        </p>
-                                                                    </div>
                                                                 </div>
                                                                 <div className="">
-                                                                    <Link className="banner-btn" to="/mysession">Start Training</Link>
+                                                                    <span>{tainerlist.firstname}</span>
+                                                                    <i className={tainerlist.availablestatus === 1 ? "fas fa-circle text-success circle-i" : (tainerlist.availablestatus === 2 ? "fas fa-circle text-danger circle-i" : "fas fa-circle text-secondary circle-i")}></i>
+                                                                    <Rating initialValue={tainerlist.rankingtrainer} size="17" readonly="true" allowHover="false" allowHalfIcon="true" />
+                                                                    <p className="mb-0">
+                                                                        {tainerlist.trainingstyle !== "" && tainerlist.trainingstyle ?
+                                                                            <span>{tainerlist.trainingstyle.substr(1, 10)}</span> : <></>
+                                                                        }
+                                                                    </p>
                                                                 </div>
+                                                            </div>
+                                                            <div className="">
+                                                                <Link className="banner-btn" to="/mysession">Start Training</Link>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </Link>
-                                        </li>
-                                        </>
+                                            </div>
+                                        </Link>
+                                    </li>
+                                    </>
                                     // } else {
                                     //     return <></>
                                     // }
@@ -235,11 +235,24 @@ function SavedTrainer({ type, flterValue }) {
         };
         await axios.post(`${apiUrl}${PORT}/trainer/trainer/savetrainerlist`, obj).then(function (response) {
             document.querySelector('.loading').classList.add('d-none');
-            setbookmarkTrainerList(response.data?.result?.client_data?.bookmarktrainer || []);
-            response.data.result.trainerlist.bookmarktrainer = response.data?.result?.client_data?.bookmarktrainer;
-            loadData(response.data?.result?.trainerlist);
-            setNoOfRecords(response.data?.result?.noOfRecords || 0);
-            initScroll();
+            if (response.data.status === 1) {
+                response.data?.result?.trainerlist.forEach(element => {
+                    var seesionrankinglist = response.data?.result?.rankinglist.filter(s => s.trainerid === element._id).map(x => x.sessionrating);
+                    element.rankingtrainer = (seesionrankinglist.length > 0) ? (((seesionrankinglist.reduce((a, v) => a = a + v.rate, 0)) / seesionrankinglist.length)) : 0;
+                });
+                setbookmarkTrainerList(response.data?.result?.client_data?.bookmarktrainer || []);
+                response.data.result.trainerlist.bookmarktrainer = response.data?.result?.client_data?.bookmarktrainer;
+                loadData(response.data?.result?.trainerlist);
+                setNoOfRecords(response.data?.result?.noOfRecords || 0);
+                initScroll();
+            } else {
+                swal({
+                    title: "Error!",
+                    text: response.data.message,
+                    icon: "error",
+                    button: true
+                })
+            }
         }).catch(function (error) {
             console.log(error);
         });

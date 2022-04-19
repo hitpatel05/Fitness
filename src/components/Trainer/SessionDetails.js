@@ -59,10 +59,11 @@ function SessionDetails() {
             setIsLoader(false);
             if (response.data.status === 1) {
                 if (response?.data?.result) {
-                    setWeight(response?.data?.result.filter(x => x?.name == 'Weight'));
-                    setRestDuration(response?.data?.result.filter(x => x?.name == 'RestDuration'));
-                    setSets(response?.data?.result.filter(x => x?.name == 'Sets'));
-                    setReps(response?.data?.result.filter(x => x?.name == 'Reps'));
+                    debugger
+                    setWeight(response?.data?.result.filter(x => x?.name === 'Weight'));
+                    setRestDuration(response?.data?.result.filter(x => x?.name === 'Rest Duration'));
+                    setSets(response?.data?.result.filter(x => x?.name === 'Sets'));
+                    setReps(response?.data?.result.filter(x => x?.name === 'Reps'));
                 }
             }
             else {
@@ -353,7 +354,7 @@ function SessionDetails() {
                                                     <select className="input-box cursor-pointer" placeholder="Select weight" onChange={(e) => { handleDyanamicVal(ele.movementName, "weight", e.target.value) }}>
                                                         <option value=''>Select weight</option>
                                                         {weightList.length > 0 && weightList.map((w) => {
-                                                            return <option value={w.value}>{w.name}</option>
+                                                            return <option value={w.value}>{w.value}</option>
                                                         })}
                                                     </select>
                                                     <i className="fas fa-chevron-down arrow_i"></i>
@@ -363,7 +364,7 @@ function SessionDetails() {
                                                     <select className="input-box cursor-pointer" placeholder="Select rest duration" onChange={(e) => { handleDyanamicVal(ele.movementName, "restDuration", e.target.value) }}>
                                                         <option value=''>Select rest duration </option>
                                                         {restDurationList.length > 0 && restDurationList.map((w) => {
-                                                            return <option value={w.value}>{w.name}</option>
+                                                            return <option value={w.value}>{w.value}</option>
                                                         })}
                                                     </select>
                                                 </div>
@@ -374,7 +375,7 @@ function SessionDetails() {
                                                     <select className="input-box cursor-pointer" placeholder="Select sets" onChange={(e) => { handleDyanamicVal(ele.movementName, "sets", e.target.value) }}>
                                                         <option value=''>Select sets</option>
                                                         {setsList.length > 0 && setsList.map((w) => {
-                                                            return <option value={w.value}>{w.name}</option>
+                                                            return <option value={w.value}>{w.value}</option>
                                                         })}
                                                     </select>
                                                     <i className="fas fa-chevron-down arrow_i"></i>
@@ -384,7 +385,7 @@ function SessionDetails() {
                                                     <select className="input-box cursor-pointer" placeholder="Select reps" onChange={(e) => { handleDyanamicVal(ele.movementName, "reps", e.target.value) }}>
                                                         <option value=''>Select reps</option>
                                                         {repsList.length > 0 && repsList?.map((w) => {
-                                                            return <option value={w.value}>{w.name}</option>
+                                                            return <option value={w.value}>{w.value}</option>
                                                         })}
                                                     </select>
                                                 </div>

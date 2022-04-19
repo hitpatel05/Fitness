@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import swal from 'sweetalert';
 import { apiUrl, PORT } from '../../environment/environment';
@@ -8,6 +8,10 @@ function SignUp() {
     const [IsNext, setIsNext] = useState(0);
     const [isHidden, setIsHidden] = useState(true);
     const [isCHidden, setIsCHidden] = useState(true);
+    const [workoutList, setWorkOutList] = useState([]);
+    const [filterWorkout, setFilterWorkout] = useState([]);
+    const [tags, settags] = useState([]);
+    const ref = useRef(null);
     useEffect(() => {
         const token = localStorage.getItem('token');
 
@@ -22,7 +26,41 @@ function SignUp() {
                 console.log(error);
             });
         }
+        getTypeOfWorkout();
+        document.addEventListener('click', handleClickOutside, true);
+        return () => {
+            document.removeEventListener('click', handleClickOutside, true);
+        };
     }, [])
+    const handleClickOutside = (event) => {
+        if (ref.current && !ref.current.contains(event.target)) {
+            user.trainingstyle = '';
+            setUser(user);
+            setFilterWorkout([]);
+        }
+    };
+
+    async function getTypeOfWorkout() {
+        document.querySelector('.loading').classList.remove('d-none');
+        await axios.get(`${apiUrl}${PORT}/trainer/trainer/getworkoutcategory`, {}, {})
+            .then(function (response) {
+                document.querySelector('.loading').classList.add('d-none');
+                if (response.data.status === 1) {
+                    setWorkOutList(response.data.result);
+                    /* setFilterWorkout(response.data.result); */
+                }
+                else {
+                    swal({
+                        title: "Error!",
+                        text: response.data.message,
+                        icon: "error",
+                        button: true
+                    });
+                }
+            }).catch(function (error) {
+                document.querySelector('.loading').classList.add('d-none');
+            });
+    };
 
     const ProfileImage_URL = '/img/default-avatar.svg';
     const CoverImage_URL = '/img/regi-cover.png';
@@ -36,7 +74,7 @@ function SignUp() {
 
 
     const OnCoverFileChange = (event) => {
-        
+
         const file_size = event.target.files[0].size;
         if (file_size > 2096000) {
             setCoverImagePreview(CoverImage_URL);
@@ -59,7 +97,7 @@ function SignUp() {
     };
 
     const OnFileChange = (event) => {
-        
+
         const file_size = event.target.files[0].size;
         if (file_size > 1048000) {
             setProfileImagePreview(ProfileImage_URL);
@@ -86,7 +124,7 @@ function SignUp() {
         specialitys: "", introduction: "", certifications: "", emailnotifications: false, maillinglist: false, textnotifications: false
     });
     const [qualificationslist, setQualifications] = useState([]);
-    // const [qualificationshtmllist, setHtmlQualifications] = useState([]);
+    const [qualificationshtmllist, setHtmlQualifications] = useState([]);
     const [qualification, setQualification] = useState("");
     const [IsTAndC, setIsTAndC] = useState(false);
     const [imagesQuaPathList, setImagesQuaPathList] = useState([]);
@@ -95,33 +133,55 @@ function SignUp() {
     }
 
     const handleQualifications = (e) => {
+
         e.preventDefault();
         var errormsg = {};
         var isValid = true;
+        
         if (qualification === "") {
             errormsg.note = "Please enter note.";
             isValid = false;
         }
+        if (imagesQuaPathList.length === 0) {
+            errormsg.image = "Please upload image here..";
+            isValid = false;
+        }
+        if (qualificationslist.length > 0 && qualificationslist.filter(x => x === qualification).length > 0) {
+            errormsg.already = "This qualification already exist!";
+            isValid = false;
+        }
+        if (imagesQuaPathList.filter(x => x.qualification === qualification).length === 0) {
+            errormsg.image = "Please upload image here..";
+            isValid = false;
+        }
+        if (imagesQuaPathList.filter(x => x.qualification === qualification).length > 0) {
+            var objFile = imagesQuaPathList.filter(x => x.qualification === qualification);
+            if (objFile[0].uri === undefined || objFile[0].uri === null) {
+                errormsg.image = "Please upload image here..";
+                isValid = false;
+            }
+        }
+
         setErrors(errormsg);
         if (isValid) {
             qualificationslist.push(qualification);
             setQualifications(qualificationslist);
             setQualification("");
 
-            // const updatedList = qualificationslist.map((listItems, index) => {
-            //     return <div id={`qualification${index}`} className="control-group input-group" style={{ marginTop: "10px" }}>
-            //         <div className="d-flex col-md-6 pl-0">
-            //             <div name="qualifications" className="removeinput">{listItems}</div>
-            //             <div className="input-group-btn position-relative">
-            //                 <button onClick={() => { removeQualifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
-            //             </div>
-            //         </div>
-            //         <div className="col-md-6 position-relative">
-            //             <img src="/img/file.png" className="Fileicon" alt='File' />
-            //         </div>
-            //     </div>
-            // });
-            // setHtmlQualifications(updatedList);
+            const updatedList = qualificationslist.map((listItems, index) => {
+                return <div id={`qualification${index}`} className="control-group input-group" style={{ marginTop: "10px" }}>
+                    <div className="d-flex col-md-6 pl-0">
+                        <div name="qualifications" className="removeinput">{listItems}</div>
+                        <div className="input-group-btn position-relative">
+                            <button onClick={() => { removeQualifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div className="col-md-6 position-relative">
+                        <img src="/img/file.png" className="Fileicon" alt='File' />
+                    </div>
+                </div>
+            });
+            setHtmlQualifications(updatedList);
         }
     }
 
@@ -130,20 +190,20 @@ function SignUp() {
         var qualificationslst = qualificationslist;
         setQualifications(qualificationslst);
 
-        // const updatedList = qualificationslist.map((listItems, index) => {
-        //     return <div key={'qualification' + index} className="control-group input-group" style={{ marginTop: "10px" }}>
-        //         <div className="d-flex">
-        //             <div name="qualifications" className="removeinput">{listItems}</div>
-        //             <div className="input-group-btn position-relative">
-        //                 <button onClick={() => { removeQualifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
-        //             </div>
-        //         </div>
-        //     </div>
-        // });
-        // setHtmlQualifications(updatedList);
+        const updatedList = qualificationslist.map((listItems, index) => {
+            return <div key={'qualification' + index} className="control-group input-group" style={{ marginTop: "10px" }}>
+                <div className="d-flex">
+                    <div name="qualifications" className="removeinput">{listItems}</div>
+                    <div className="input-group-btn position-relative">
+                        <button onClick={() => { removeQualifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
+                    </div>
+                </div>
+            </div>
+        });
+        setHtmlQualifications(updatedList);
     }
 
-    const OnQualificationFileChange = (event) => {
+    const OnQualificationFileChange = (event, value) => {
         const file_size = event.target.files[0].size;
         if (file_size > 1048000) {
             setImagesQuaPathList(null);
@@ -160,7 +220,8 @@ function SignUp() {
                     "uri": file,
                     "name": file.name,
                     "type": file.type,
-                    "id": maxId
+                    "id": maxId,
+                    "qualification": value
                 });
                 setImagesQuaPathList(imagesQuaPathList);
             };
@@ -221,7 +282,7 @@ function SignUp() {
     }
 
     const [certificationslist, setCertifications] = useState([]);
-    // const [certificationshtmllist, setHtmlCertifications] = useState([]);
+    const [certificationshtmllist, setHtmlCertifications] = useState([]);
     const [certification, setCertification] = useState("");
     const [cerimagesPathList, setCerImagesPathList] = useState([]);
 
@@ -230,23 +291,51 @@ function SignUp() {
     }
 
     const handleCertifications = (e) => {
-        if (certification === "")
-            return;
-        certificationslist.push(certification);
-        setCertifications(certificationslist);
-        setCertification("");
+        e.preventDefault();
+        var errormsg = {};
+        var isValid = true;
 
-        // const updatedCList = certificationslist.map((ClistItems, index) => {
-        //     return <div key={'certification' + index} className="control-group input-group" style={{ marginTop: "10px" }}>
-        //         <div className="d-flex">
-        //             <div name="certifications" className="removeinput">{ClistItems}</div>
-        //             <div className="input-group-btn position-relative">
-        //                 <button onClick={() => { removeCertifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
-        //             </div>
-        //         </div>
-        //     </div>
-        // });
-        // setHtmlCertifications(updatedCList);
+        if (certification === "") {
+            errormsg.certification = "Please enter certification.";
+            isValid = false;
+        }
+        if (cerimagesPathList.length === 0) {
+            errormsg.certificationImg = "Please upload image here..";
+            isValid = false;
+        }
+        if (certificationslist.length > 0 && certificationslist.filter(x => x === certification).length > 0) {
+            errormsg.certificationAlready = "This certification already exist!";
+            isValid = false;
+        }
+        if (cerimagesPathList.filter(x => x.certification === certification).length === 0) {
+            errormsg.certificationImg = "Please upload image here..";
+            isValid = false;
+        }
+        if (cerimagesPathList.filter(x => x.certification === certification).length > 0) {
+            var objFile = cerimagesPathList.filter(x => x.certification === certification);
+            if (objFile[0].uri === undefined || objFile[0].uri === null) {
+                errormsg.certificationImg = "Please upload image here..";
+                isValid = false;
+            }
+        }
+        setErrors(errormsg);
+        if (isValid) {
+            certificationslist.push(certification);
+            setCertifications(certificationslist);
+            setCertification("");
+        }
+
+        const updatedCList = certificationslist.map((ClistItems, index) => {
+            return <div key={'certification' + index} className="control-group input-group" style={{ marginTop: "10px" }}>
+                <div className="d-flex">
+                    <div name="certifications" className="removeinput">{ClistItems}</div>
+                    <div className="input-group-btn position-relative">
+                        <button onClick={() => { removeCertifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
+                    </div>
+                </div>
+            </div>
+        });
+        setHtmlCertifications(updatedCList);
     }
 
     const removeCertifications = (index) => {
@@ -254,20 +343,20 @@ function SignUp() {
         var certificationslst = certificationslist;
         setCertifications(certificationslst);
 
-        // const updatedCList = certificationslist.map((ClistItems, index) => {
-        //     return <div key={'certification' + index} className="control-group input-group" style={{ marginTop: "10px" }}>
-        //         <div className="d-flex">
-        //             <div name="certifications" className="removeinput">{ClistItems}</div>
-        //             <div className="input-group-btn position-relative">
-        //                 <button onClick={() => { removeCertifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
-        //             </div>
-        //         </div>
-        //     </div>
-        // });
-        // setHtmlCertifications(updatedCList);
+        const updatedCList = certificationslist.map((ClistItems, index) => {
+            return <div key={'certification' + index} className="control-group input-group" style={{ marginTop: "10px" }}>
+                <div className="d-flex">
+                    <div name="certifications" className="removeinput">{ClistItems}</div>
+                    <div className="input-group-btn position-relative">
+                        <button onClick={() => { removeCertifications(index) }} className="remove position-absolute" type="button"><i className="fas fa-times"></i></button>
+                    </div>
+                </div>
+            </div>
+        });
+        setHtmlCertifications(updatedCList);
     }
 
-    const onCertificationFileChange = (event) => {
+    const onCertificationFileChange = (event, value) => {
         const file_size = event.target.files[0].size;
         if (file_size > 1048000) {
             setCerImagesPathList(null);
@@ -284,7 +373,8 @@ function SignUp() {
                     "uri": file,
                     "name": file.name,
                     "type": file.type,
-                    "id": maxId
+                    "id": maxId,
+                    "certification": value
                 });
                 setCerImagesPathList(cerimagesPathList);
             };
@@ -320,6 +410,7 @@ function SignUp() {
 
     const PostSignUp = async (e) => {
         e.preventDefault();
+        
 
         let isValid = true;
         var errormsg = {};
@@ -366,7 +457,7 @@ function SignUp() {
             errormsg.aboutus = "Please enter about us description.";
             isValid = false;
         }
-        if (user.trainingstyle === "") {
+        if (tags.length === 0) {
             errormsg.trainingstyle = "Please enter training style.";
             isValid = false;
         }
@@ -402,7 +493,7 @@ function SignUp() {
         }
         setErrors(errormsg);
         if (isValid === true) {
-            
+
             let getFirstStepNextObj = JSON.parse(localStorage.getItem("firstStepNext"));
             let qualificationsObj = {
                 "name": qualificationslist.join(","),
@@ -423,7 +514,7 @@ function SignUp() {
             formData.append('phoneno', user.phoneno);
             formData.append('gender', user.gender);
             formData.append('aboutus', user.aboutus);
-            formData.append('trainingstyle', user.trainingstyle);
+            formData.append('trainingstyle', tags.join(','));
             formData.append('quote', user.quote);
             formData.append('experience', parseInt(expVal));//parseInt(document.getElementById("experience").value));
             formData.append('specialitys', specialityslist.toString());
@@ -455,14 +546,14 @@ function SignUp() {
             //     "maillinglist": (user.maillinglist === "on") ? true : user.maillinglist,
             //     "textnotifications": (user.textnotifications === "on") ? true : user.textnotifications
             // }
-            
+
             document.querySelector('.loading').classList.remove('d-none');
             axios.post(`${apiUrl}${PORT}/trainer/account/register`, formData)
                 .then(response => {
-                    
+
                     document.querySelector('.loading').classList.add('d-none');
                     if (response.data.status === 1) {
-                        
+
                         localStorage.setItem('trainerId', response.data.result._id);
                         if (qualificationsObj != null || certificationsObj != null) {
                             updateTrainerPara(qualificationsObj, certificationsObj, response.data.result._id);
@@ -487,7 +578,7 @@ function SignUp() {
         }
     }
     const updateTrainerPara = (qualificationsObj, certificationsObj, tid) => {
-        
+
         var form_data = new FormData();
         for (var key in qualificationsObj?.path) {
             form_data.append(qualificationsObj?.path[key].name, qualificationsObj?.path[key].uri);
@@ -498,11 +589,11 @@ function SignUp() {
         form_data.append("id", tid);
         form_data.append("qualifications", JSON.stringify(qualificationsObj));
         form_data.append("certifications", JSON.stringify(certificationsObj));
-        
+
         document.querySelector('.loading').classList.remove('d-none');
         axios.post(`${apiUrl}${PORT}/trainer/account/updateTrainerPara`, form_data)
             .then(response => {
-                
+
                 document.querySelector('.loading').classList.add('d-none');
                 if (response.data.status === 1) {
                     history.push("/trainersaccountinfo");
@@ -629,7 +720,11 @@ function SignUp() {
             errormsg.aboutus = "Please enter about us description.";
             isValid = false;
         }
-        if (user.trainingstyle === "") {
+        /* if (user.trainingstyle === "") {
+            errormsg.trainingstyle = "Please enter training style.";
+            isValid = false;
+        } */
+        if (tags.length === 0) {
             errormsg.trainingstyle = "Please enter training style.";
             isValid = false;
         }
@@ -655,11 +750,47 @@ function SignUp() {
             localStorage.setItem("secoundStepNext", JSON.stringify(user));
         }
     }
+    const tagChange = (e) => {
+        setUser({ ...user, trainingstyle: e.target.value });
+        handleSuggestion();
+    };
 
+    const handleKeyDown = e => {
+        if (e.keyCode === 9) {
+            e.preventDefault();
+        }
+        handleSuggestion();
+    };
+
+    const handleSuggestion = () => {
+
+        const suggestFilterInput = workoutList.filter(suggest =>
+            suggest.name.toLowerCase().includes(user.trainingstyle?.toLowerCase())
+        );
+
+        const suggestFilterTags = suggestFilterInput.filter(
+            suggest => !tags.includes(suggest.name)
+        );
+        setFilterWorkout(suggestFilterTags);
+    };
+
+    const handleDelete = i => {
+        const newTags = tags.filter((tag, j) => i !== j);
+        settags(newTags);
+        setFilterWorkout([]);
+    };
+
+    const AddTags = text => {
+        
+        settags([...tags, text]);
+        user.trainingstyle = '';
+        setUser(user);
+        setFilterWorkout([]);
+    };
     return (
         <>
-            <div className="container my-md-5 py-md-4">
-                <div className="commonbox">
+            <div className="container my-md-5 py-md-4" ref={ref}>
+                <div className="commonbox" ref={ref}>
                     <div className="col-md-12">
                         <div className={`row ${IsNext === 0 ? "" : "d-none"}`}>
                             <div className="col-md-6 p-0">
@@ -830,7 +961,40 @@ function SignUp() {
                                         <div className="text-danger">{errors.aboutus}</div>
                                     </div>
                                     <div className="col-md-12">
-                                        <textarea onChange={(e) => handleInputs(e)} value={user.trainingstyle} name="trainingstyle" className="w-100 mb-4" placeholder="Describe your training style"></textarea>
+                                        <div className="tags-content">
+                                            {tags.map((tag, i) => (
+                                                <div key={i} className="tag">
+                                                    {tag}
+                                                    <div className="remove-tag" onClick={() => handleDelete(i)}>
+                                                        ×
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <div className="tags-input">
+                                                <input
+                                                    type="text"
+                                                    className="w-100 mb-4"
+                                                    value={user.trainingstyle}
+                                                    onChange={(e) => { tagChange(e) }}
+                                                    onKeyDown={(e) => { handleKeyDown(e) }}
+                                                    placeholder="Describe your training style"
+
+                                                />
+                                                {Boolean(filterWorkout.length) && (
+                                                    <div className="tags-suggestions">
+                                                        {filterWorkout.map(suggest => {
+                                                            return <div
+                                                                className="suggestion-item"
+                                                                onClick={() => AddTags(suggest.name)}
+                                                            >
+                                                                {suggest.name}
+                                                            </div>
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* <textarea onChange={(e) => handleInputs(e)} value={user.trainingstyle} name="trainingstyle" className="w-100 mb-4" placeholder="Describe your training style"></textarea> */}
                                         <div className="text-danger">{errors.trainingstyle}</div>
                                     </div>
                                     <div className="col-md-12">
@@ -863,7 +1027,7 @@ function SignUp() {
                                             <div className="col-md-10 col-10 mt-4">
                                                 <div className="row unused">
                                                     <div className="input-group control-group after-add-more position-relative">
-                                                        <input onChange={(e) => handleQualification(e)} type="text" name="qualification" value={qualification} className="input-box w-100" placeholder="Qualification Details" />
+                                                        <input onChange={(e) => handleQualification(e)} autoComplete={'off'} type="text" name="qualification" value={qualification} className="input-box w-100" placeholder="Qualification Details" />
                                                         <div className="input-group-btn">
                                                             <button onClick={(e) => { handleQualifications(e) }} className="add-more position-absolute" type="button"><i className="fas fa-plus"></i></button>
                                                         </div>
@@ -872,7 +1036,7 @@ function SignUp() {
                                             </div>
                                             <div className="col-md-2 col-2 mt-3 pr-0 text-center">
                                                 <div className="uploadimg">
-                                                    <input type="file" id="uploadQualification" onChange={OnQualificationFileChange} accept=".png, .jpg, .jpeg, .pdf, .doc" />
+                                                    <input type="file" id="uploadQualification" onChange={(e) => { OnQualificationFileChange(e, qualification) }} accept=".png, .jpg, .jpeg, .pdf, .doc" />
                                                     <label for="uploadQualification">
                                                         <img src="/img/upload.png" alt='Upload' />
                                                     </label>
@@ -895,6 +1059,7 @@ function SignUp() {
                                             {/* <div className="text-danger">{errors.qualification}</div> */}
                                             <div className="text-danger">{errors.note}</div>
                                             <div className="text-danger">{errors.image}</div>
+                                            <div className="text-danger">{errors.already}</div>
                                         </div>
                                     </div>
                                     {qualificationslist.length > 0 && qualificationslist.map((listItems, index) => {
@@ -958,7 +1123,7 @@ function SignUp() {
                                         <div className="row unused">
                                             <div className="input-group control-group after-add-more position-relative">
                                                 <div className="col-md-10 col-10">
-                                                    <input onChange={(e1) => handleSpeciality(e1)} type="text" name="speciality" value={speciality} className="input-box w-100" placeholder="Fitness Speciality" />
+                                                    <input onChange={(e1) => handleSpeciality(e1)} type="text" autoComplete={'off'} name="speciality" value={speciality} className="input-box w-100" placeholder="Fitness Speciality" />
                                                 </div>
                                                 <div className="col-md-2 col-2 d-flex p-0">
                                                     <div className="input-group-btn">
@@ -1015,7 +1180,7 @@ function SignUp() {
                                             <div className="col-md-10 col-10 mt-4">
                                                 <div className="row unused">
                                                     <div className="input-group control-group after-add-more position-relative">
-                                                        <input onChange={(e2) => handleCertification(e2)} type="text" name="certification" value={certification} className="input-box w-100 mb-3" placeholder="Certifications" />
+                                                        <input onChange={(e2) => handleCertification(e2)} type="text" autoComplete={'off'} name="certification" value={certification} className="input-box w-100 mb-3" placeholder="Certifications" />
                                                         <div className="input-group-btn">
                                                             <button onClick={(e2) => { handleCertifications(e2) }} className="add-more position-absolute" type="button"><i className="fas fa-plus"></i></button>
                                                         </div>
@@ -1024,30 +1189,16 @@ function SignUp() {
                                             </div>
                                             <div className="col-md-2 col-2 mt-3 pr-0 text-center">
                                                 <div className="uploadimg">
-                                                    <input type="file" id="uploadCertifications" onChange={onCertificationFileChange} accept=".png, .jpg, .jpeg, .pdf, .doc" />
+                                                    <input type="file" id="uploadCertifications" onChange={(e) => { onCertificationFileChange(e, certification) }} accept=".png, .jpg, .jpeg, .pdf, .doc" />
                                                     <label htmlFor="uploadCertifications">
                                                         <img src="/img/upload.png" alt='Upload' />
                                                     </label>
                                                 </div>
 
                                             </div>
-                                            {/* <div className="col-md-12 pl-0">
-                                                <div className="col-md-10">
-                                                    <div className="copy">
-                                                        {certificationshtmllist}
-                                                    </div>
-                                                </div>
-                                            </div> */}
-                                            {/* <div className="col-md-12 pl-0" style={{ display: 'none' }}>
-                                                <div className="col-md-10">
-                                                    <div className="copy">
-                                                        {certificationshtmllist}
-                                                    </div>
-                                                </div>
-                                            </div> */}
-                                            {/* <div className="text-danger">{errors.certification}</div> */}
-                                            <div className="text-danger">{errors.certifications}</div>
+                                            <div className="text-danger">{errors.certification}</div>
                                             <div className="text-danger">{errors.certificationImg}</div>
+                                            <div className="text-danger">{errors.certificationAlready}</div>
                                         </div>
                                     </div>
                                     {certificationslist.length > 0 && certificationslist.map((ClistItems, index) => {
